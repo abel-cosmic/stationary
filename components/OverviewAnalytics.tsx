@@ -1,43 +1,65 @@
 "use client";
 
-import { Product } from "@/lib/api";
+import { useMemo } from "react";
+import { Product, Category } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, ShoppingCart, TrendingUp, Package } from "lucide-react";
+import { FolderTree, Package, DollarSign, TrendingUp } from "lucide-react";
 
-interface ProductAnalyticsProps {
-  product: Product;
+interface OverviewAnalyticsProps {
+  categories: Category[];
+  products: Product[];
 }
 
-export function ProductAnalytics({ product }: ProductAnalyticsProps) {
+export function OverviewAnalytics({
+  categories,
+  products,
+}: OverviewAnalyticsProps) {
+  const analytics = useMemo(() => {
+    const totalCategories = categories.length;
+    const totalProducts = products.length;
+    let totalRevenue = 0;
+    let totalProfit = 0;
+
+    products.forEach((product) => {
+      totalRevenue += product.revenue || 0;
+      totalProfit += product.profit || 0;
+    });
+
+    return {
+      totalCategories,
+      totalProducts,
+      totalRevenue,
+      totalProfit,
+    };
+  }, [categories, products]);
+
   const stats = [
     {
+      title: "Total Categories",
+      value: analytics.totalCategories,
+      icon: FolderTree,
+      description: "Product categories",
+    },
+    {
+      title: "Total Products",
+      value: analytics.totalProducts,
+      icon: Package,
+      description: "Products in inventory",
+    },
+    {
       title: "Total Revenue",
-      value: product.revenue || 0,
+      value: analytics.totalRevenue,
       icon: DollarSign,
-      description: "Total revenue from all sales",
+      description: "Revenue from all sales",
       isCurrency: true,
     },
     {
-      title: "Items Sold",
-      value: product.totalSold || 0,
-      icon: ShoppingCart,
-      description: "Total quantity sold",
-      isCurrency: false,
-    },
-    {
       title: "Total Profit",
-      value: product.profit || 0,
+      value: analytics.totalProfit,
       icon: TrendingUp,
       description: "Overall profit",
       isCurrency: true,
       isProfit: true,
-    },
-    {
-      title: "Current Stock",
-      value: product.quantity,
-      icon: Package,
-      description: "Items remaining in stock",
-      isCurrency: false,
     },
   ];
 

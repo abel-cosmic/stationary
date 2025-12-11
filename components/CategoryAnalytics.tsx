@@ -1,43 +1,62 @@
 "use client";
 
+import { useMemo } from "react";
 import { Product } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, ShoppingCart, TrendingUp, Package } from "lucide-react";
+import { Package, DollarSign, TrendingUp, ShoppingCart } from "lucide-react";
 
-interface ProductAnalyticsProps {
-  product: Product;
+interface CategoryAnalyticsProps {
+  products: Product[];
 }
 
-export function ProductAnalytics({ product }: ProductAnalyticsProps) {
+export function CategoryAnalytics({ products }: CategoryAnalyticsProps) {
+  const analytics = useMemo(() => {
+    const productCount = products.length;
+    let categoryRevenue = 0;
+    let categoryProfit = 0;
+    let itemsSold = 0;
+
+    products.forEach((product) => {
+      categoryRevenue += product.revenue || 0;
+      categoryProfit += product.profit || 0;
+      itemsSold += product.totalSold || 0;
+    });
+
+    return {
+      productCount,
+      categoryRevenue,
+      categoryProfit,
+      itemsSold,
+    };
+  }, [products]);
+
   const stats = [
     {
-      title: "Total Revenue",
-      value: product.revenue || 0,
+      title: "Products",
+      value: analytics.productCount,
+      icon: Package,
+      description: "Products in this category",
+    },
+    {
+      title: "Category Revenue",
+      value: analytics.categoryRevenue,
       icon: DollarSign,
-      description: "Total revenue from all sales",
+      description: "Total revenue from category",
       isCurrency: true,
     },
     {
-      title: "Items Sold",
-      value: product.totalSold || 0,
-      icon: ShoppingCart,
-      description: "Total quantity sold",
-      isCurrency: false,
-    },
-    {
-      title: "Total Profit",
-      value: product.profit || 0,
+      title: "Category Profit",
+      value: analytics.categoryProfit,
       icon: TrendingUp,
-      description: "Overall profit",
+      description: "Total profit from category",
       isCurrency: true,
       isProfit: true,
     },
     {
-      title: "Current Stock",
-      value: product.quantity,
-      icon: Package,
-      description: "Items remaining in stock",
-      isCurrency: false,
+      title: "Items Sold",
+      value: analytics.itemsSold,
+      icon: ShoppingCart,
+      description: "Total items sold",
     },
   ];
 

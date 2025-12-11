@@ -9,6 +9,14 @@ datasource db {
   provider = "postgresql"
 }
 
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
 model Product {
   id           Int           @id @default(autoincrement())
   name         String
@@ -18,6 +26,8 @@ model Product {
   totalSold    Int           @default(0)
   revenue      Float         @default(0)
   profit       Float         @default(0)
+  categoryId   Int?
+  category     Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   sellHistory  SellHistory[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -26,7 +36,7 @@ model Product {
 model SellHistory {
   id         Int      @id @default(autoincrement())
   productId  Int
-  product    Product  @relation(fields: [productId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   amount     Int
   soldPrice  Float
   totalPrice Float

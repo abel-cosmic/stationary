@@ -7,12 +7,14 @@ const createProductSchema = z.object({
   initialPrice: z.number().positive("Initial price must be positive"),
   sellingPrice: z.number().positive("Selling price must be positive"),
   quantity: z.number().int().min(0, "Quantity must be non-negative"),
+  categoryId: z.number().int().positive().nullable().optional(),
 });
 
 export async function GET() {
   try {
     const products = await prisma.product.findMany({
       include: {
+        category: true,
         _count: {
           select: {
             sellHistory: true,
@@ -45,7 +47,16 @@ export async function POST(request: NextRequest) {
     const validatedData = createProductSchema.parse(body);
 
     const product = await prisma.product.create({
-      data: validatedData,
+      data: {
+        name: validatedData.name,
+        initialPrice: validatedData.initialPrice,
+        sellingPrice: validatedData.sellingPrice,
+        quantity: validatedData.quantity,
+        categoryId: validatedData.categoryId ?? null,
+      },
+      include: {
+        category: true,
+      },
     });
 
     return NextResponse.json(product, { status: 201 });

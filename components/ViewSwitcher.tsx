@@ -19,12 +19,12 @@ export function ViewSwitcher({ view, onViewChange }: ViewSwitcherProps) {
         size="sm"
         onClick={() => onViewChange("card")}
         className={cn(
-          "h-8 px-2 sm:px-3",
+          "h-10 w-10 sm:h-9 sm:w-auto sm:px-3 touch-manipulation",
           view === "card" ? "bg-background shadow-sm" : ""
         )}
         aria-label="Card view"
       >
-        <LayoutGrid className="h-4 w-4 sm:mr-2" />
+        <LayoutGrid className="h-5 w-5 sm:h-4 sm:w-4 sm:mr-2" />
         <span className="hidden sm:inline">Card</span>
       </Button>
       <Button
@@ -32,12 +32,12 @@ export function ViewSwitcher({ view, onViewChange }: ViewSwitcherProps) {
         size="sm"
         onClick={() => onViewChange("table")}
         className={cn(
-          "h-8 px-2 sm:px-3",
+          "h-10 w-10 sm:h-9 sm:w-auto sm:px-3 touch-manipulation",
           view === "table" ? "bg-background shadow-sm" : ""
         )}
         aria-label="Table view"
       >
-        <Table2 className="h-4 w-4 sm:mr-2" />
+        <Table2 className="h-5 w-5 sm:h-4 sm:w-4 sm:mr-2" />
         <span className="hidden sm:inline">Table</span>
       </Button>
     </div>

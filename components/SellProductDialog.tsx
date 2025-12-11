@@ -89,18 +89,18 @@ export function SellProductDialog({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Sell {product.name}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">Sell {product.name}</DialogTitle>
+          <DialogDescription className="text-sm">
             Enter the amount and price you want to sell. Available:{" "}
             {product.quantity}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto">
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount" className="text-sm font-medium">Amount</Label>
               <Input
                 id="amount"
                 type="number"
@@ -108,17 +108,17 @@ export function SellProductDialog({
                 max={product.quantity}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className=""
+                className="h-11 sm:h-10 text-base sm:text-sm"
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="soldPrice">
+              <Label htmlFor="soldPrice" className="text-sm font-medium">
                 Selling Price (per unit)
-                <span className="text-muted-foreground text-xs ml-2">
-                  Default: {product.sellingPrice.toFixed(2)} ETB
-                </span>
               </Label>
+              <p className="text-xs text-muted-foreground mb-1">
+                Default: {product.sellingPrice.toFixed(2)} ETB
+              </p>
               <Input
                 id="soldPrice"
                 type="number"
@@ -126,7 +126,7 @@ export function SellProductDialog({
                 min="0.01"
                 value={soldPrice}
                 onChange={(e) => setSoldPrice(e.target.value)}
-                className=""
+                className="h-11 sm:h-10 text-base sm:text-sm"
                 required
               />
             </div>
@@ -134,27 +134,27 @@ export function SellProductDialog({
               soldPrice &&
               !isNaN(parseInt(amount)) &&
               !isNaN(parseFloat(soldPrice)) && (
-                <div className="p-3 bg-muted rounded-md border">
-                  <p className="text-sm text-muted-foreground">Total Revenue:</p>
-                  <p className="text-lg font-semibold text-primary">
+                <div className="p-3 sm:p-4 bg-muted rounded-md border">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Revenue:</p>
+                  <p className="text-base sm:text-lg font-semibold text-primary">
                     {(parseInt(amount) * parseFloat(soldPrice)).toFixed(2)} ETB
                   </p>
                 </div>
               )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className=""
+              className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={sellProduct.isPending}
-              className=""
+              className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
             >
               {sellProduct.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

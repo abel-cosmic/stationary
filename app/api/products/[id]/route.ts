@@ -7,6 +7,7 @@ const updateProductSchema = z.object({
   initialPrice: z.number().positive().optional(),
   sellingPrice: z.number().positive().optional(),
   quantity: z.number().int().min(0).optional(),
+  categoryId: z.number().int().positive().nullable().optional(),
 });
 
 export async function GET(
@@ -27,6 +28,7 @@ export async function GET(
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
+        category: true,
         sellHistory: {
           orderBy: {
             createdAt: "desc",
@@ -69,7 +71,24 @@ export async function PUT(
 
     const product = await prisma.product.update({
       where: { id: productId },
-      data: validatedData,
+      data: {
+        ...(validatedData.name !== undefined && { name: validatedData.name }),
+        ...(validatedData.initialPrice !== undefined && {
+          initialPrice: validatedData.initialPrice,
+        }),
+        ...(validatedData.sellingPrice !== undefined && {
+          sellingPrice: validatedData.sellingPrice,
+        }),
+        ...(validatedData.quantity !== undefined && {
+          quantity: validatedData.quantity,
+        }),
+        ...(validatedData.categoryId !== undefined && {
+          categoryId: validatedData.categoryId ?? null,
+        }),
+      },
+      include: {
+        category: true,
+      },
     });
 
     return NextResponse.json(product);

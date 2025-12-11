@@ -11,7 +11,14 @@ import { SellHistoryTable } from "@/components/SellHistoryTable";
 import { SellHistoryCards } from "@/components/SellHistoryCards";
 import { ViewSwitcher, type ViewMode } from "@/components/ViewSwitcher";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Loader2, ArrowLeft, MoreVertical } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -53,12 +60,12 @@ export default function ProductDetailsPage({
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
         <Link href="/">
           <Button
             variant="ghost"
             size="sm"
-            className="mb-4 sm:mb-6"
+            className="mb-3 sm:mb-4 lg:mb-6 h-10 sm:h-9 touch-manipulation"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Back to Products</span>
@@ -66,12 +73,12 @@ export default function ProductDetailsPage({
           </Button>
         </Link>
 
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-3 sm:space-y-4 lg:space-y-6">
           <ProductSummaryCard product={product} />
 
           <ProductAnalytics product={product} />
 
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4">
             <div className="flex-1 sm:flex-initial">
               <SellProductDialog product={product} />
             </div>
@@ -79,10 +86,37 @@ export default function ProductDetailsPage({
               <EditProductDialog product={product} />
             </div>
             <div className="flex-1 sm:flex-initial">
-              <DeleteButton
-                productId={product.id}
-                productName={product.name}
-              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation">
+                    <MoreVertical className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">More Actions</span>
+                    <span className="sm:hidden">More</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/products/${product.id}`)}
+                  >
+                    View Details
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DeleteButton
+                    productId={product.id}
+                    productName={product.name}
+                    trigger={
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onSelect={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        Delete Product
+                      </DropdownMenuItem>
+                    }
+                  />
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 

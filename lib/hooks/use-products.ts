@@ -33,8 +33,12 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: (data: CreateProductData) => createProduct(data),
-    onSuccess: () => {
+    onSuccess: (product) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      // If product has a category, invalidate categories to update product count
+      if (product.categoryId) {
+        queryClient.invalidateQueries({ queryKey: ["categories"] });
+      }
     },
   });
 }
@@ -75,4 +79,3 @@ export function useSellProduct() {
     },
   });
 }
-

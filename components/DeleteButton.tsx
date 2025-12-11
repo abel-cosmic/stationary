@@ -53,20 +53,25 @@ export function DeleteButton({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Delete Product</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete "{productName}"? This action cannot
-            be undone.
+          <DialogTitle className="text-lg sm:text-xl">Delete Product</DialogTitle>
+          <DialogDescription className="space-y-2 text-sm">
+            <p>
+              Are you sure you want to delete "{productName}"? This action cannot
+              be undone.
+            </p>
+            <p className="text-destructive font-medium">
+              All associated sell history will also be permanently deleted.
+            </p>
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
             onClick={() => setOpen(false)}
-            className=""
+            className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
           >
             Cancel
           </Button>
@@ -75,12 +80,12 @@ export function DeleteButton({
             variant="destructive"
             onClick={handleDelete}
             disabled={deleteProduct.isPending}
-            className=""
+            className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
           >
             {deleteProduct.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Delete
+            Delete Permanently
           </Button>
         </DialogFooter>
       </DialogContent>
