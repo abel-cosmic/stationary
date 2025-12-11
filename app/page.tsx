@@ -1,15 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { useProducts } from "@/lib/hooks/use-products";
 import { CategoryCard } from "@/components/CategoryCard";
+import { CategoryTable } from "@/components/CategoryTable";
 import { CategoryManager } from "@/components/CategoryManager";
 import { OverviewAnalytics } from "@/components/OverviewAnalytics";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ViewSwitcher, type ViewMode } from "@/components/ViewSwitcher";
 import { Loader2, FolderTree, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const {
     data: categories,
     isLoading: categoriesLoading,
@@ -77,11 +81,20 @@ export default function Home() {
         )}
 
         {categories && categories.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-            {categories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
-          </div>
+          <>
+            <div className="mb-3 sm:mb-4 lg:mb-6 flex justify-end">
+              <ViewSwitcher view={viewMode} onViewChange={setViewMode} />
+            </div>
+            {viewMode === "card" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                {categories.map((category) => (
+                  <CategoryCard key={category.id} category={category} />
+                ))}
+              </div>
+            ) : (
+              <CategoryTable categories={categories} />
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
             <FolderTree className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
