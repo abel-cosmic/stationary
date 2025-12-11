@@ -12,8 +12,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Upload, Loader2, FileSpreadsheet } from "lucide-react";
-import { parseExcelFile, parseExcelFileMultipleSheets } from "@/lib/excel-utils";
+import {
+  parseExcelFile,
+  parseExcelFileMultipleSheets,
+} from "@/lib/excel-utils";
 import { useCreateProduct } from "@/lib/hooks/use-products";
+import { useCreateCategory } from "@/lib/hooks/use-categories";
+import { useProducts } from "@/lib/hooks/use-products";
+import { sellProduct } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,10 +30,12 @@ export function ImportButton() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [availableSheets, setAvailableSheets] = useState<string[]>([]);
   const [importOptions, setImportOptions] = useState<{
+    categories: boolean;
     products: boolean;
     sellHistory: boolean;
     analytics: boolean;
   }>({
+    categories: false,
     products: true,
     sellHistory: false,
     analytics: false,
@@ -38,6 +46,8 @@ export function ImportButton() {
     errors: string[];
   } | null>(null);
   const createProduct = useCreateProduct();
+  const createCategory = useCreateCategory();
+  const { data: products } = useProducts();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -50,14 +60,15 @@ export function ImportButton() {
       setFile(selectedFile);
       setImportStatus(null);
       setAvailableSheets([]); // Reset first
-      
+
       // Detect available sheets in the file
       try {
         const sheets = await parseExcelFileMultipleSheets(selectedFile);
         setAvailableSheets(sheets);
-        
+
         // Auto-select options based on available sheets
         setImportOptions({
+          categories: sheets.includes("Categories"),
           products: sheets.includes("Products") || sheets.length > 0, // Default to first sheet if Products not found
           sellHistory: sheets.includes("Sell History"),
           analytics: false, // Analytics is read-only, not importable
@@ -75,7 +86,12 @@ export function ImportButton() {
     } else {
       setFile(null);
       setAvailableSheets([]);
-      setImportOptions({ products: true, sellHistory: false, analytics: false });
+      setImportOptions({
+        categories: false,
+        products: true,
+        sellHistory: false,
+        analytics: false,
+      });
     }
   };
 
@@ -98,22 +114,73 @@ export function ImportButton() {
       let failedCount = 0;
       const errors: string[] = [];
 
+      // Import Categories
+      if (importOptions.categories) {
+        try {
+          const sheetName = availableSheets.includes("Categories")
+            ? "Categories"
+            : availableSheets[0] || undefined;
+          const data = await parseExcelFile(file, sheetName);
+
+          const existingCategoryNames = new Set<string>();
+
+          for (const row of data) {
+            try {
+              const categoryName = String(
+                row["Category Name"] || row["Name"] || ""
+              ).trim();
+
+              if (!categoryName) {
+                throw new Error("Category name is required");
+              }
+
+              // Skip if already processed in this batch
+              if (existingCategoryNames.has(categoryName)) {
+                throw new Error(
+                  `Duplicate category name in import: ${categoryName}`
+                );
+              }
+              existingCategoryNames.add(categoryName);
+
+              await createCategory.mutateAsync({ name: categoryName });
+              successCount++;
+            } catch (error) {
+              failedCount++;
+              const errorMsg =
+                error instanceof Error ? error.message : "Unknown error";
+              const rowIndex = data.indexOf(row) + 2;
+              errors.push(`Categories - Row ${rowIndex}: ${errorMsg}`);
+            }
+          }
+        } catch (error) {
+          errors.push(
+            `Categories sheet: ${
+              error instanceof Error ? error.message : "Failed to read"
+            }`
+          );
+        }
+      }
+
       // Import Products
       if (importOptions.products) {
         try {
           // Try to use "Products" sheet if available, otherwise use first sheet
-          const sheetName = availableSheets.includes("Products") 
-            ? "Products" 
+          const sheetName = availableSheets.includes("Products")
+            ? "Products"
             : availableSheets[0] || undefined;
           const data = await parseExcelFile(file, sheetName);
-          
+
           for (const row of data) {
             try {
               // Map Excel columns to product data
               const productData = {
                 name: String(row["Product Name"] || row["Name"] || "").trim(),
-                initialPrice: parseFloat(row["Initial Price (ETB)"] || row["Initial Price"] || 0),
-                sellingPrice: parseFloat(row["Selling Price (ETB)"] || row["Selling Price"] || 0),
+                initialPrice: parseFloat(
+                  row["Initial Price (ETB)"] || row["Initial Price"] || 0
+                ),
+                sellingPrice: parseFloat(
+                  row["Selling Price (ETB)"] || row["Selling Price"] || 0
+                ),
                 quantity: parseInt(row["Quantity"] || row["Stock"] || 0),
               };
 
@@ -135,20 +202,27 @@ export function ImportButton() {
               successCount++;
             } catch (error) {
               failedCount++;
-              const errorMsg = error instanceof Error ? error.message : "Unknown error";
+              const errorMsg =
+                error instanceof Error ? error.message : "Unknown error";
               const rowIndex = data.indexOf(row) + 2;
               errors.push(`Products - Row ${rowIndex}: ${errorMsg}`);
             }
           }
         } catch (error) {
-          errors.push(`Products sheet: ${error instanceof Error ? error.message : "Failed to read"}`);
+          errors.push(
+            `Products sheet: ${
+              error instanceof Error ? error.message : "Failed to read"
+            }`
+          );
         }
       }
 
       // Note: Sell History import would require matching products by ID/Name
       // This is complex and may not be needed, so we'll skip it for now
       if (importOptions.sellHistory) {
-        errors.push("Sell History import is not yet supported. Please import products first, then record sales manually.");
+        errors.push(
+          "Sell History import is not yet supported. Please import products first, then record sales manually."
+        );
       }
 
       setImportStatus({
@@ -164,12 +238,19 @@ export function ImportButton() {
           setOpen(false);
           setImportStatus(null);
           setAvailableSheets([]);
-          setImportOptions({ products: true, sellHistory: false, analytics: false });
+          setImportOptions({
+            categories: false,
+            products: true,
+            sellHistory: false,
+            analytics: false,
+          });
         }, 3000);
       }
     } catch (error) {
       console.error("Import error:", error);
-      alert("Failed to import file. Please check the file format and try again.");
+      alert(
+        "Failed to import file. Please check the file format and try again."
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -210,7 +291,8 @@ export function ImportButton() {
                 {file.name}
                 {availableSheets.length > 0 && (
                   <span className="ml-2 text-xs">
-                    ({availableSheets.length} sheet{availableSheets.length !== 1 ? "s" : ""} found)
+                    ({availableSheets.length} sheet
+                    {availableSheets.length !== 1 ? "s" : ""} found)
                   </span>
                 )}
               </div>
@@ -219,28 +301,92 @@ export function ImportButton() {
 
           <div className="space-y-3">
             <Label className="text-base font-semibold">Import Options</Label>
-            
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="import-categories"
+                checked={importOptions.categories}
+                disabled={
+                  !!(
+                    file &&
+                    availableSheets.length > 0 &&
+                    !availableSheets.includes("Categories")
+                  )
+                }
+                onCheckedChange={(checked) =>
+                  setImportOptions({
+                    ...importOptions,
+                    categories: checked === true,
+                  })
+                }
+              />
+              <Label
+                htmlFor="import-categories"
+                className={`text-sm font-normal ${
+                  file &&
+                  availableSheets.length > 0 &&
+                  !availableSheets.includes("Categories")
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }`}
+              >
+                Categories
+                {file &&
+                  availableSheets.length > 0 &&
+                  !availableSheets.includes("Categories") && (
+                    <span className="text-muted-foreground ml-2">
+                      (Sheet not found)
+                    </span>
+                  )}
+                {file && availableSheets.length === 0 && (
+                  <span className="text-muted-foreground ml-2 text-xs">
+                    (Will import from first sheet)
+                  </span>
+                )}
+                {!file && (
+                  <span className="text-muted-foreground ml-2 text-xs">
+                    (Select file first)
+                  </span>
+                )}
+              </Label>
+            </div>
+
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="import-products"
                 checked={importOptions.products}
-                disabled={!!(file && availableSheets.length > 0 && !availableSheets.includes("Products"))}
+                disabled={
+                  !!(
+                    file &&
+                    availableSheets.length > 0 &&
+                    !availableSheets.includes("Products")
+                  )
+                }
                 onCheckedChange={(checked) =>
-                  setImportOptions({ ...importOptions, products: checked === true })
+                  setImportOptions({
+                    ...importOptions,
+                    products: checked === true,
+                  })
                 }
               />
               <Label
                 htmlFor="import-products"
                 className={`text-sm font-normal ${
-                  file && availableSheets.length > 0 && !availableSheets.includes("Products")
+                  file &&
+                  availableSheets.length > 0 &&
+                  !availableSheets.includes("Products")
                     ? "opacity-50 cursor-not-allowed"
                     : "cursor-pointer"
                 }`}
               >
                 Product List
-                {file && availableSheets.length > 0 && !availableSheets.includes("Products") && (
-                  <span className="text-muted-foreground ml-2">(Sheet not found)</span>
-                )}
+                {file &&
+                  availableSheets.length > 0 &&
+                  !availableSheets.includes("Products") && (
+                    <span className="text-muted-foreground ml-2">
+                      (Sheet not found)
+                    </span>
+                  )}
                 {file && availableSheets.length === 0 && (
                   <span className="text-muted-foreground ml-2 text-xs">
                     (Will import from first sheet)
@@ -258,26 +404,39 @@ export function ImportButton() {
               <Checkbox
                 id="import-history"
                 checked={importOptions.sellHistory}
-                disabled={!file || (availableSheets.length > 0 && !availableSheets.includes("Sell History"))}
+                disabled={
+                  !file ||
+                  (availableSheets.length > 0 &&
+                    !availableSheets.includes("Sell History"))
+                }
                 onCheckedChange={(checked) =>
-                  setImportOptions({ ...importOptions, sellHistory: checked === true })
+                  setImportOptions({
+                    ...importOptions,
+                    sellHistory: checked === true,
+                  })
                 }
               />
               <Label
                 htmlFor="import-history"
                 className={`text-sm font-normal ${
-                  !file || (availableSheets.length > 0 && !availableSheets.includes("Sell History"))
+                  !file ||
+                  (availableSheets.length > 0 &&
+                    !availableSheets.includes("Sell History"))
                     ? "opacity-50 cursor-not-allowed"
                     : "cursor-pointer"
                 }`}
               >
                 Sell History
-                {file && availableSheets.length > 0 && !availableSheets.includes("Sell History") && (
-                  <span className="text-muted-foreground ml-2">(Sheet not found)</span>
-                )}
+                {file &&
+                  availableSheets.length > 0 &&
+                  !availableSheets.includes("Sell History") && (
+                    <span className="text-muted-foreground ml-2">
+                      (Sheet not found)
+                    </span>
+                  )}
                 {file && availableSheets.includes("Sell History") && (
                   <span className="text-muted-foreground ml-2 text-xs">
-                    (Not yet supported)
+                    (Requires products to exist)
                   </span>
                 )}
                 {!file && (
@@ -307,11 +466,14 @@ export function ImportButton() {
             </div>
           </div>
 
-          {!importOptions.products && !importOptions.sellHistory && file && (
-            <p className="text-sm text-destructive">
-              Please select at least one option to import.
-            </p>
-          )}
+          {!importOptions.categories &&
+            !importOptions.products &&
+            !importOptions.sellHistory &&
+            file && (
+              <p className="text-sm text-destructive">
+                Please select at least one option to import.
+              </p>
+            )}
 
           {importStatus && (
             <div className="p-3 rounded-md border space-y-2">
@@ -347,7 +509,12 @@ export function ImportButton() {
               setFile(null);
               setImportStatus(null);
               setAvailableSheets([]);
-              setImportOptions({ products: true, sellHistory: false, analytics: false });
+              setImportOptions({
+                categories: false,
+                products: true,
+                sellHistory: false,
+                analytics: false,
+              });
             }}
             disabled={isProcessing}
           >
@@ -359,7 +526,9 @@ export function ImportButton() {
             disabled={
               !file ||
               isProcessing ||
-              (!importOptions.products && !importOptions.sellHistory)
+              (!importOptions.categories &&
+                !importOptions.products &&
+                !importOptions.sellHistory)
             }
           >
             {isProcessing ? (
@@ -376,4 +545,3 @@ export function ImportButton() {
     </Dialog>
   );
 }
-

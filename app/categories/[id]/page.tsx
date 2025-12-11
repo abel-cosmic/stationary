@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductTable } from "@/components/ProductTable";
 import { SearchBar } from "@/components/SearchBar";
 import { CreateProductDialog } from "@/components/CreateProductDialog";
+import { ExportDialog } from "@/components/ExportDialog";
 import { ViewSwitcher, type ViewMode } from "@/components/ViewSwitcher";
 import { CategoryAnalytics } from "@/components/CategoryAnalytics";
 import { Button } from "@/components/ui/button";
@@ -76,7 +77,11 @@ export default function CategoryProductsPage({
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
         <Link href="/">
-          <Button variant="ghost" size="sm" className="mb-3 sm:mb-4 lg:mb-6 h-10 sm:h-9 touch-manipulation">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-3 sm:mb-4 lg:mb-6 h-10 sm:h-9 touch-manipulation"
+          >
             <ArrowLeft className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Back to Categories</span>
             <span className="sm:hidden">Back</span>
@@ -96,8 +101,11 @@ export default function CategoryProductsPage({
               {categoryProducts.length !== 1 ? "s" : ""} in this category
             </p>
           </div>
-          <div className="flex-shrink-0">
+          <div className="flex flex-wrap gap-2 shrink-0">
             <CreateProductDialog categoryId={categoryId} />
+            {categoryProducts.length > 0 && (
+              <ExportDialog products={categoryProducts} />
+            )}
           </div>
         </div>
 
@@ -109,7 +117,7 @@ export default function CategoryProductsPage({
           <div className="flex-1 min-w-0">
             <SearchBar onSearch={setSearchQuery} />
           </div>
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <ViewSwitcher view={viewMode} onViewChange={setViewMode} />
           </div>
         </div>

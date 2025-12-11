@@ -18,6 +18,7 @@ import {
   type DateRange,
   type DatePreset,
 } from "@/components/DateRangePicker";
+import { AnalyticsExportButton } from "@/components/AnalyticsExportButton";
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 
 interface AnalyticsProps {
@@ -176,13 +177,14 @@ export function Analytics({ products }: AnalyticsProps) {
 
       {/* Analytics cards - hidden by default, shown when expanded */}
       <div className={cn(isExpanded ? "block" : "hidden")}>
-        <div className="mb-4">
+        <div className="mb-4 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
           <DateRangePicker
             value={dateRange}
             onChange={setDateRange}
             preset={datePreset}
             onPresetChange={setDatePreset}
           />
+          <AnalyticsExportButton products={products} />
         </div>
         <div
           className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4")}

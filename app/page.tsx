@@ -6,6 +6,8 @@ import { useProducts } from "@/lib/hooks/use-products";
 import { CategoryCard } from "@/components/CategoryCard";
 import { CategoryTable } from "@/components/CategoryTable";
 import { CategoryManager } from "@/components/CategoryManager";
+import { CategoryExportButton } from "@/components/CategoryExportButton";
+import { ImportButton } from "@/components/ImportButton";
 import { OverviewAnalytics } from "@/components/OverviewAnalytics";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ViewSwitcher, type ViewMode } from "@/components/ViewSwitcher";
@@ -69,8 +71,14 @@ export default function Home() {
               <ThemeToggle />
             </div>
           </div>
-          <div className="shrink-0">
+          <div className="flex flex-wrap gap-2 shrink-0">
             <CategoryManager />
+            {categories && categories.length > 0 && (
+              <>
+                <CategoryExportButton categories={categories} />
+                <ImportButton />
+              </>
+            )}
           </div>
         </div>
 
