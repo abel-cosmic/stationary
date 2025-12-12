@@ -35,12 +35,14 @@ import {
   X,
   Eye,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CategoryTableProps {
   categories: Category[];
 }
 
 export function CategoryTable({ categories }: CategoryTableProps) {
+  const { t } = useTranslation();
   const router = useRouter();
 
   return (
@@ -48,9 +50,15 @@ export function CategoryTable({ categories }: CategoryTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="min-w-[200px]">Name</TableHead>
-            <TableHead className="hidden sm:table-cell">Products</TableHead>
-            <TableHead className="text-right min-w-[150px]">Actions</TableHead>
+            <TableHead className="min-w-[200px]">
+              {t("common.table.name")}
+            </TableHead>
+            <TableHead className="hidden sm:table-cell">
+              {t("common.table.products")}
+            </TableHead>
+            <TableHead className="text-right min-w-[150px]">
+              {t("common.table.actions")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -68,6 +76,7 @@ interface CategoryTableRowProps {
 }
 
 function CategoryTableRow({ category }: CategoryTableRowProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const productCount = category._count?.products ?? 0;
   const [isEditing, setIsEditing] = useState(false);
@@ -133,7 +142,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
                 className="h-9 w-9 p-0"
                 onClick={handleSaveEdit}
                 disabled={updateCategory.isPending}
-                title="Save"
+                title={t("common.buttons.save")}
               >
                 {updateCategory.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -146,7 +155,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
                 size="sm"
                 className="h-9 w-9 p-0"
                 onClick={handleCancelEdit}
-                title="Cancel"
+                title={t("common.buttons.cancel")}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -165,7 +174,10 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
           <div className="flex items-center gap-2 text-muted-foreground">
             <Package className="h-4 w-4" />
             <span>
-              {productCount} product{productCount !== 1 ? "s" : ""}
+              {productCount}{" "}
+              {productCount !== 1
+                ? t("common.product.productsPlural")
+                : t("common.product.products")}
             </span>
           </div>
         </TableCell>
@@ -178,7 +190,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
                   size="sm"
                   onClick={() => router.push(`/categories/${category.id}`)}
                   className="h-9 w-9 p-0 touch-manipulation"
-                  title="View Products"
+                  title={t("common.buttons.viewProducts")}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -190,7 +202,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
                     e.stopPropagation();
                     setIsEditing(true);
                   }}
-                  title="Edit category"
+                  title={t("common.category.edit")}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -203,7 +215,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
                     setDeleteDialogOpen(true);
                   }}
                   disabled={deleteCategory.isPending}
-                  title="Delete category"
+                  title={t("common.category.delete")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -217,19 +229,18 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Category</DialogTitle>
+            <DialogTitle>{t("common.category.deleteTitle")}</DialogTitle>
             <DialogDescription>
               {productCount > 0 ? (
                 <>
-                  Are you sure you want to delete "{category.name}"? This will
-                  permanently delete the category and all {productCount} product
-                  {productCount !== 1 ? "s" : ""} associated with it, including
-                  all sell history. This action cannot be undone.
+                  {t("common.category.deleteConfirmWithProducts", {
+                    name: category.name,
+                    count: productCount,
+                  })}
                 </>
               ) : (
                 <>
-                  Are you sure you want to delete "{category.name}"? This action
-                  cannot be undone.
+                  {t("common.category.deleteConfirm", { name: category.name })}
                 </>
               )}
             </DialogDescription>
@@ -240,7 +251,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              Cancel
+              {t("common.buttons.cancel")}
             </Button>
             <Button
               type="button"
@@ -251,7 +262,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
               {deleteCategory.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Delete Permanently
+              {t("common.buttons.deletePermanently")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -259,4 +270,3 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
     </>
   );
 }
-

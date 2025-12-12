@@ -2,90 +2,109 @@
 
 import { Product } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { DollarSign, ShoppingCart, TrendingUp, Package } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ProductAnalyticsProps {
   product: Product;
 }
 
 export function ProductAnalytics({ product }: ProductAnalyticsProps) {
+  const { t } = useTranslation();
   const stats = [
     {
-      title: "Total Revenue",
+      title: t("common.analytics.totalRevenue"),
       value: product.revenue || 0,
       icon: DollarSign,
-      description: "Total revenue from all sales",
+      description: t("common.analytics.totalRevenueFromAllSales"),
       isCurrency: true,
     },
     {
-      title: "Items Sold",
+      title: t("common.analytics.itemsSold"),
       value: product.totalSold || 0,
       icon: ShoppingCart,
-      description: "Total quantity sold",
+      description: t("common.analytics.totalQuantitySold"),
       isCurrency: false,
     },
     {
-      title: "Total Profit",
+      title: t("common.analytics.totalProfit"),
       value: product.profit || 0,
       icon: TrendingUp,
-      description: "Overall profit",
+      description: t("common.analytics.overallProfit"),
       isCurrency: true,
       isProfit: true,
     },
     {
-      title: "Current Stock",
+      title: t("common.analytics.currentStock"),
       value: product.quantity,
       icon: Package,
-      description: "Items remaining in stock",
+      description: t("common.analytics.itemsRemainingInStock"),
       isCurrency: false,
     },
   ];
 
   return (
     <div className="mb-4 sm:mb-6">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          const isPositive = stat.isProfit ? stat.value >= 0 : true;
+      <Accordion defaultOpen={false}>
+        <div className="border rounded-lg">
+          <AccordionTrigger className="px-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              <span>{t("common.analytics.productAnalytics")}</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+              {stats.map((stat) => {
+                const Icon = stat.icon;
+                const isPositive = stat.isProfit ? stat.value >= 0 : true;
 
-          return (
-            <Card
-              key={stat.title}
-              className="hover:shadow-md transition-shadow"
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
-                <CardTitle className="text-xs sm:text-sm font-medium leading-tight">
-                  {stat.title}
-                </CardTitle>
-                <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-              </CardHeader>
-              <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-                <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-                  {stat.isCurrency ? (
-                    stat.isProfit ? (
-                      <span
-                        className={
-                          isPositive ? "text-green-400" : "text-red-400"
-                        }
-                      >
-                        {stat.value >= 0 ? "+" : ""}
-                        {stat.value.toFixed(2)} ETB
-                      </span>
-                    ) : (
-                      <span>{stat.value.toFixed(2)} ETB</span>
-                    )
-                  ) : (
-                    <span>{stat.value}</span>
-                  )}
-                </div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                  {stat.description}
-                </p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                return (
+                  <Card
+                    key={stat.title}
+                    className="hover:shadow-md transition-shadow"
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+                      <CardTitle className="text-xs sm:text-sm font-medium leading-tight">
+                        {stat.title}
+                      </CardTitle>
+                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                    </CardHeader>
+                    <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                      <div className="text-lg sm:text-xl lg:text-2xl font-bold">
+                        {stat.isCurrency ? (
+                          stat.isProfit ? (
+                            <span
+                              className={
+                                isPositive ? "text-green-400" : "text-red-400"
+                              }
+                            >
+                              {stat.value >= 0 ? "+" : ""}
+                              {stat.value.toFixed(2)} ETB
+                            </span>
+                          ) : (
+                            <span>{stat.value.toFixed(2)} ETB</span>
+                          )
+                        ) : (
+                          <span>{stat.value}</span>
+                        )}
+                      </div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
+                        {stat.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </AccordionContent>
+        </div>
+      </Accordion>
     </div>
   );
 }

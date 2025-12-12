@@ -10,16 +10,20 @@ import { CreateProductDialog } from "@/components/CreateProductDialog";
 import { ExportDialog } from "@/components/ExportDialog";
 import { ViewSwitcher, type ViewMode } from "@/components/ViewSwitcher";
 import { CategoryAnalytics } from "@/components/CategoryAnalytics";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, FolderTree } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 export default function CategoryProductsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const { t } = useTranslation();
   const { id } = use(params);
   const categoryId = parseInt(id);
   const router = useRouter();
@@ -62,11 +66,11 @@ export default function CategoryProductsPage({
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-2">
-            {error ? "Error loading products" : "Category not found"}
+            {error ? t("common.errors.loadingProducts") : t("common.errors.categoryNotFound")}
           </p>
           <Button onClick={() => router.push("/")} className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Categories
+            {t("common.backToHome")}
           </Button>
         </div>
       </div>
@@ -76,17 +80,23 @@ export default function CategoryProductsPage({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
-        <Link href="/">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mb-3 sm:mb-4 lg:mb-6 h-10 sm:h-9 touch-manipulation"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Back to Categories</span>
-            <span className="sm:hidden">Back</span>
-          </Button>
-        </Link>
+        <div className="mb-3 sm:mb-4 lg:mb-6 flex items-center justify-between gap-2">
+          <Link href="/">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-10 sm:h-9 touch-manipulation"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">{t("common.backToHome")}</span>
+              <span className="sm:hidden">{t("common.back")}</span>
+            </Button>
+          </Link>
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
+        </div>
 
         <div className="mb-4 sm:mb-6 lg:mb-8 flex flex-col gap-3 sm:gap-4">
           <div>
@@ -97,8 +107,11 @@ export default function CategoryProductsPage({
               </h1>
             </div>
             <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
-              {categoryProducts.length} product
-              {categoryProducts.length !== 1 ? "s" : ""} in this category
+              {categoryProducts.length}{" "}
+              {categoryProducts.length !== 1
+                ? t("common.product.productsPlural")
+                : t("common.product.products")}{" "}
+              {t("common.category.productsInCategory")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
@@ -126,8 +139,8 @@ export default function CategoryProductsPage({
           <div className="text-center py-8 sm:py-12">
             <p className="text-muted-foreground text-base sm:text-lg">
               {searchQuery
-                ? "No products found matching your search."
-                : "No products in this category yet. Create your first product to get started."}
+                ? t("common.search.noResults")
+                : t("common.category.noProductsInCategory")}
             </p>
           </div>
         ) : viewMode === "card" ? (

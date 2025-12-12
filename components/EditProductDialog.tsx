@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
   Dialog,
   DialogContent,
@@ -12,11 +15,45 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useUpdateProduct } from "@/lib/hooks/use-products";
 import { Product } from "@/lib/api";
 import { CategorySelect } from "@/components/CategorySelect";
 import { Loader2, Edit } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+const createProductSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z.string().min(1, t("common.product.nameRequired")),
+    initialPrice: z.coerce
+      .number()
+      .positive(t("common.product.initialPriceRequired"))
+      .min(0.01, t("common.product.initialPriceMin")),
+    sellingPrice: z.coerce
+      .number()
+      .positive(t("common.product.sellingPriceRequired"))
+      .min(0.01, t("common.product.sellingPriceMin")),
+    quantity: z.coerce
+      .number()
+      .int(t("common.product.quantityRequired"))
+      .min(0, t("common.product.quantityMin")),
+    categoryId: z.number().nullable().optional(),
+  });
+
+type ProductFormValues = {
+  name: string;
+  initialPrice: number;
+  sellingPrice: number;
+  quantity: number;
+  categoryId: number | null | undefined;
+};
 
 interface EditProductDialogProps {
   product: Product;
@@ -27,40 +64,46 @@ export function EditProductDialog({
   product,
   trigger,
 }: EditProductDialogProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: product.name,
-    initialPrice: product.initialPrice.toString(),
-    sellingPrice: product.sellingPrice.toString(),
-    quantity: product.quantity.toString(),
-    categoryId: product.categoryId ?? null,
-  });
   const updateProduct = useUpdateProduct();
 
+  const schema = useMemo(() => createProductSchema(t), [t]);
+
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(schema) as any,
+    defaultValues: {
+      name: product.name,
+      initialPrice: product.initialPrice,
+      sellingPrice: product.sellingPrice,
+      quantity: product.quantity,
+      categoryId: product.categoryId ?? null,
+    },
+  });
+
+  // Reset form when dialog opens or product changes
   useEffect(() => {
     if (open) {
-      setFormData({
+      form.reset({
         name: product.name,
-        initialPrice: product.initialPrice.toString(),
-        sellingPrice: product.sellingPrice.toString(),
-        quantity: product.quantity.toString(),
+        initialPrice: product.initialPrice,
+        sellingPrice: product.sellingPrice,
+        quantity: product.quantity,
         categoryId: product.categoryId ?? null,
       });
     }
-  }, [open, product]);
+  }, [open, product, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = async (data: ProductFormValues) => {
     try {
       await updateProduct.mutateAsync({
         id: product.id,
         data: {
-          name: formData.name,
-          initialPrice: parseFloat(formData.initialPrice),
-          sellingPrice: parseFloat(formData.sellingPrice),
-          quantity: parseInt(formData.quantity),
-          categoryId: formData.categoryId,
+          name: data.name,
+          initialPrice: data.initialPrice,
+          sellingPrice: data.sellingPrice,
+          quantity: data.quantity,
+          categoryId: data.categoryId,
         },
       });
       setOpen(false);
@@ -81,111 +124,148 @@ export function EditProductDialog({
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Edit Product</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">
+            {t("common.product.edit")}
+          </DialogTitle>
           <DialogDescription className="text-sm">
-            Update the product information below.
+            {t("common.product.update")}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">
-                Name
-              </Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="h-11 sm:h-10 text-base sm:text-sm"
-                required
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(
+              onSubmit as (data: ProductFormValues) => Promise<void>
+            )}
+          >
+            <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      {t("common.product.name")}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        className="h-11 sm:h-10 text-base sm:text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="initialPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      Initial Price
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        onChange={(e) => field.onChange(e.target.value)}
+                        value={field.value || ""}
+                        className="h-11 sm:h-10 text-base sm:text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="sellingPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      {t("common.product.sellingPrice")}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        onChange={(e) => field.onChange(e.target.value)}
+                        value={field.value || ""}
+                        className="h-11 sm:h-10 text-base sm:text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      {t("common.product.quantity")}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        min="0"
+                        onChange={(e) => field.onChange(e.target.value)}
+                        value={field.value || ""}
+                        className="h-11 sm:h-10 text-base sm:text-sm"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      {t("common.product.category")}
+                    </FormLabel>
+                    <FormControl>
+                      <CategorySelect
+                        value={field.value ?? null}
+                        onValueChange={field.onChange}
+                        placeholder={t("common.product.selectCategory")}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="initialPrice" className="text-sm font-medium">
-                Initial Price
-              </Label>
-              <Input
-                id="initialPrice"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.initialPrice}
-                onChange={(e) =>
-                  setFormData({ ...formData, initialPrice: e.target.value })
-                }
-                className="h-11 sm:h-10 text-base sm:text-sm"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="sellingPrice" className="text-sm font-medium">
-                Selling Price
-              </Label>
-              <Input
-                id="sellingPrice"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.sellingPrice}
-                onChange={(e) =>
-                  setFormData({ ...formData, sellingPrice: e.target.value })
-                }
-                className="h-11 sm:h-10 text-base sm:text-sm"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quantity" className="text-sm font-medium">
-                Quantity
-              </Label>
-              <Input
-                id="quantity"
-                type="number"
-                min="0"
-                value={formData.quantity}
-                onChange={(e) =>
-                  setFormData({ ...formData, quantity: e.target.value })
-                }
-                className="h-11 sm:h-10 text-base sm:text-sm"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category" className="text-sm font-medium">
-                Category (Optional)
-              </Label>
-              <CategorySelect
-                value={formData.categoryId}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, categoryId: value })
-                }
-                placeholder="Select a category"
-              />
-            </div>
-          </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={updateProduct.isPending}
-              className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
-            >
-              {updateProduct.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
+              >
+                {t("common.buttons.cancel")}
+              </Button>
+              <Button
+                type="submit"
+                disabled={updateProduct.isPending}
+                className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
+              >
+                {updateProduct.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {t("common.buttons.saveChanges")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -23,8 +23,10 @@ import { sellProduct } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslation } from "react-i18next";
 
 export function ImportButton() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -54,7 +56,7 @@ export function ImportButton() {
     if (selectedFile) {
       const ext = selectedFile.name.split(".").pop()?.toLowerCase();
       if (ext !== "xlsx" && ext !== "xls") {
-        alert("Please select an Excel file (.xlsx or .xls)");
+        alert(t("common.import.selectExcelFile"));
         return;
       }
       setFile(selectedFile);
@@ -78,6 +80,7 @@ export function ImportButton() {
         // Even if sheet detection fails, allow import from first sheet
         setAvailableSheets(["Products"]); // Default assumption
         setImportOptions({
+          categories: false,
           products: true,
           sellHistory: false,
           analytics: false,
@@ -131,13 +134,15 @@ export function ImportButton() {
               ).trim();
 
               if (!categoryName) {
-                throw new Error("Category name is required");
+                throw new Error(t("common.import.categoryNameRequired"));
               }
 
               // Skip if already processed in this batch
               if (existingCategoryNames.has(categoryName)) {
                 throw new Error(
-                  `Duplicate category name in import: ${categoryName}`
+                  t("common.import.duplicateCategoryName", {
+                    name: categoryName,
+                  })
                 );
               }
               existingCategoryNames.add(categoryName);
@@ -147,15 +152,25 @@ export function ImportButton() {
             } catch (error) {
               failedCount++;
               const errorMsg =
-                error instanceof Error ? error.message : "Unknown error";
+                error instanceof Error
+                  ? error.message
+                  : t("common.errors.unknownError");
               const rowIndex = data.indexOf(row) + 2;
-              errors.push(`Categories - Row ${rowIndex}: ${errorMsg}`);
+              errors.push(
+                `${t("common.import.categories")} - ${t(
+                  "common.import.row"
+                )} ${rowIndex}: ${errorMsg}`
+              );
             }
           }
         } catch (error) {
           errors.push(
-            `Categories sheet: ${
-              error instanceof Error ? error.message : "Failed to read"
+            `${t("common.import.categories")} ${t(
+              "common.import.sheetsFound"
+            )}: ${
+              error instanceof Error
+                ? error.message
+                : t("common.import.failedToRead")
             }`
           );
         }
@@ -186,16 +201,16 @@ export function ImportButton() {
 
               // Validate data
               if (!productData.name) {
-                throw new Error("Product name is required");
+                throw new Error(t("common.import.productNameRequired"));
               }
               if (productData.initialPrice <= 0) {
-                throw new Error("Initial price must be positive");
+                throw new Error(t("common.import.initialPriceMustBePositive"));
               }
               if (productData.sellingPrice <= 0) {
-                throw new Error("Selling price must be positive");
+                throw new Error(t("common.import.sellingPriceMustBePositive"));
               }
               if (productData.quantity < 0 || isNaN(productData.quantity)) {
-                throw new Error("Quantity must be a non-negative number");
+                throw new Error(t("common.import.quantityMustBeNonNegative"));
               }
 
               await createProduct.mutateAsync(productData);
@@ -203,15 +218,25 @@ export function ImportButton() {
             } catch (error) {
               failedCount++;
               const errorMsg =
-                error instanceof Error ? error.message : "Unknown error";
+                error instanceof Error
+                  ? error.message
+                  : t("common.errors.unknownError");
               const rowIndex = data.indexOf(row) + 2;
-              errors.push(`Products - Row ${rowIndex}: ${errorMsg}`);
+              errors.push(
+                `${t("common.import.products")} - ${t(
+                  "common.import.row"
+                )} ${rowIndex}: ${errorMsg}`
+              );
             }
           }
         } catch (error) {
           errors.push(
-            `Products sheet: ${
-              error instanceof Error ? error.message : "Failed to read"
+            `${t("common.import.products")} ${t(
+              "common.import.sheetsFound"
+            )}: ${
+              error instanceof Error
+                ? error.message
+                : t("common.errors.unknownError")
             }`
           );
         }
@@ -248,9 +273,7 @@ export function ImportButton() {
       }
     } catch (error) {
       console.error("Import error:", error);
-      alert(
-        "Failed to import file. Please check the file format and try again."
-      );
+      alert(t("common.import.importFailed"));
     } finally {
       setIsProcessing(false);
     }
@@ -267,9 +290,9 @@ export function ImportButton() {
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Import from Excel</DialogTitle>
+          <DialogTitle>{t("common.import.title")}</DialogTitle>
           <DialogDescription>
-            Upload an Excel file and select what data you want to import.
+            {t("common.import.description")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -291,8 +314,11 @@ export function ImportButton() {
                 {file.name}
                 {availableSheets.length > 0 && (
                   <span className="ml-2 text-xs">
-                    ({availableSheets.length} sheet
-                    {availableSheets.length !== 1 ? "s" : ""} found)
+                    ({availableSheets.length}{" "}
+                    {availableSheets.length !== 1
+                      ? t("common.import.sheetsFoundPlural")
+                      : t("common.import.sheetsFound")}
+                    )
                   </span>
                 )}
               </div>
@@ -300,7 +326,9 @@ export function ImportButton() {
           </div>
 
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Import Options</Label>
+            <Label className="text-base font-semibold">
+              {t("common.import.importOptions")}
+            </Label>
 
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -379,22 +407,22 @@ export function ImportButton() {
                     : "cursor-pointer"
                 }`}
               >
-                Product List
+                {t("common.import.productList")}
                 {file &&
                   availableSheets.length > 0 &&
                   !availableSheets.includes("Products") && (
                     <span className="text-muted-foreground ml-2">
-                      (Sheet not found)
+                      {t("common.import.sheetNotFound")}
                     </span>
                   )}
                 {file && availableSheets.length === 0 && (
                   <span className="text-muted-foreground ml-2 text-xs">
-                    (Will import from first sheet)
+                    {t("common.import.willImportFromFirstSheet")}
                   </span>
                 )}
                 {!file && (
                   <span className="text-muted-foreground ml-2 text-xs">
-                    (Select file first)
+                    {t("common.import.selectFileFirst")}
                   </span>
                 )}
               </Label>
@@ -458,9 +486,9 @@ export function ImportButton() {
                 htmlFor="import-analytics"
                 className="text-sm font-normal opacity-50 cursor-not-allowed"
               >
-                Analytics Summary
+                {t("common.import.analyticsSummary")}
                 <span className="text-muted-foreground ml-2 text-xs">
-                  (Read-only, cannot be imported)
+                  {t("common.import.readOnlyCannotImport")}
                 </span>
               </Label>
             </div>
@@ -479,11 +507,11 @@ export function ImportButton() {
             <div className="p-3 rounded-md border space-y-2">
               <div className="text-sm">
                 <span className="text-green-400 font-semibold">
-                  Success: {importStatus.success}
+                  {t("common.import.success")}: {importStatus.success}
                 </span>
                 {importStatus.failed > 0 && (
                   <span className="text-red-400 font-semibold ml-4">
-                    Failed: {importStatus.failed}
+                    {t("common.import.failed")}: {importStatus.failed}
                   </span>
                 )}
               </div>
@@ -493,7 +521,7 @@ export function ImportButton() {
                     <div key={idx}>{error}</div>
                   ))}
                   {importStatus.errors.length === 10 && (
-                    <div>... and more errors</div>
+                    <div>{t("common.import.andMoreErrors")}</div>
                   )}
                 </div>
               )}
@@ -518,7 +546,7 @@ export function ImportButton() {
             }}
             disabled={isProcessing}
           >
-            Cancel
+            {t("common.buttons.cancel")}
           </Button>
           <Button
             type="button"
@@ -534,10 +562,10 @@ export function ImportButton() {
             {isProcessing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Importing...
+                {t("common.import.importing")}
               </>
             ) : (
-              "Import"
+              t("common.import.import")
             )}
           </Button>
         </DialogFooter>

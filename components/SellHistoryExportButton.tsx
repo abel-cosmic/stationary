@@ -5,6 +5,7 @@ import { Download, Loader2 } from "lucide-react";
 import { Product, SellHistory } from "@/lib/api";
 import { exportSellHistoryToExcel } from "@/lib/excel-utils";
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 interface SellHistoryExportButtonProps {
   products: Product[];
@@ -13,6 +14,7 @@ interface SellHistoryExportButtonProps {
 export function SellHistoryExportButton({
   products,
 }: SellHistoryExportButtonProps) {
+  const { t } = useTranslation();
   const [isExporting, setIsExporting] = useState(false);
 
   // Extract all sell history from products
@@ -28,7 +30,7 @@ export function SellHistoryExportButton({
 
   const handleExport = () => {
     if (allSellHistory.length === 0) {
-      alert("No sell history to export");
+      alert(t("common.export.noSellHistoryToExport"));
       return;
     }
 
@@ -37,7 +39,7 @@ export function SellHistoryExportButton({
       exportSellHistoryToExcel(allSellHistory, products);
     } catch (error) {
       console.error("Export error:", error);
-      alert("Failed to export data. Please try again.");
+      alert(t("common.export.failedToExport"));
     } finally {
       setIsExporting(false);
     }
@@ -53,13 +55,17 @@ export function SellHistoryExportButton({
       {isExporting ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="hidden sm:inline">Exporting...</span>
+          <span className="hidden sm:inline">
+            {t("common.export.exporting")}
+          </span>
         </>
       ) : (
         <>
           <Download className="h-4 w-4" />
-          <span className="hidden sm:inline">Export Sell History</span>
-          <span className="sm:hidden">Export</span>
+          <span className="hidden sm:inline">
+            {t("common.sellHistory.exportHistory")}
+          </span>
+          <span className="sm:hidden">{t("common.export.export")}</span>
         </>
       )}
     </Button>

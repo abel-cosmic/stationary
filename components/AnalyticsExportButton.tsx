@@ -5,6 +5,7 @@ import { Download, Loader2 } from "lucide-react";
 import { Product } from "@/lib/api";
 import { exportAnalyticsToExcel } from "@/lib/excel-utils";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface AnalyticsExportButtonProps {
   products: Product[];
@@ -13,11 +14,12 @@ interface AnalyticsExportButtonProps {
 export function AnalyticsExportButton({
   products,
 }: AnalyticsExportButtonProps) {
+  const { t } = useTranslation();
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = () => {
     if (products.length === 0) {
-      alert("No products available for analytics export");
+      alert(t("common.export.noProductsForAnalytics"));
       return;
     }
 
@@ -26,7 +28,7 @@ export function AnalyticsExportButton({
       exportAnalyticsToExcel(products);
     } catch (error) {
       console.error("Export error:", error);
-      alert("Failed to export analytics. Please try again.");
+      alert(t("common.export.failedToExportAnalytics"));
     } finally {
       setIsExporting(false);
     }
@@ -43,13 +45,17 @@ export function AnalyticsExportButton({
       {isExporting ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="hidden sm:inline">Exporting...</span>
+          <span className="hidden sm:inline">
+            {t("common.export.exporting")}
+          </span>
         </>
       ) : (
         <>
           <Download className="h-4 w-4" />
-          <span className="hidden sm:inline">Export Analytics</span>
-          <span className="sm:hidden">Export</span>
+          <span className="hidden sm:inline">
+            {t("common.export.exportAnalytics")}
+          </span>
+          <span className="sm:hidden">{t("common.export.export")}</span>
         </>
       )}
     </Button>

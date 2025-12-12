@@ -10,6 +10,13 @@ import { DeleteButton } from "@/components/DeleteButton";
 import { SellHistoryTable } from "@/components/SellHistoryTable";
 import { SellHistoryCards } from "@/components/SellHistoryCards";
 import { ViewSwitcher, type ViewMode } from "@/components/ViewSwitcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,15 +25,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Loader2, ArrowLeft, MoreVertical } from "lucide-react";
+import { Loader2, ArrowLeft, MoreVertical, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 export default function ProductDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const { t } = useTranslation();
   const { id } = use(params);
   const productId = parseInt(id);
   const router = useRouter();
@@ -45,13 +54,10 @@ export default function ProductDetailsPage({
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-2">Product not found</p>
-          <Button
-            onClick={() => router.push("/")}
-            className="mt-4"
-          >
+          <p className="text-destructive mb-2">{t("common.errors.productNotFound")}</p>
+          <Button onClick={() => router.push("/")} className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
+            {t("common.backToHome")}
           </Button>
         </div>
       </div>
@@ -61,17 +67,23 @@ export default function ProductDetailsPage({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
-        <Link href="/">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mb-3 sm:mb-4 lg:mb-6 h-10 sm:h-9 touch-manipulation"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Back to Products</span>
-            <span className="sm:hidden">Back</span>
-          </Button>
-        </Link>
+        <div className="mb-3 sm:mb-4 lg:mb-6 flex items-center justify-between gap-2">
+          <Link href="/">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-10 sm:h-9 touch-manipulation"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">{t("common.backToHome")}</span>
+              <span className="sm:hidden">{t("common.back")}</span>
+            </Button>
+          </Link>
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
+        </div>
 
         <div className="space-y-3 sm:space-y-4 lg:space-y-6">
           <ProductSummaryCard product={product} />
@@ -88,17 +100,20 @@ export default function ProductDetailsPage({
             <div className="flex-1 sm:flex-initial">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation">
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
+                  >
                     <MoreVertical className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">More Actions</span>
-                    <span className="sm:hidden">More</span>
+                    <span className="hidden sm:inline">{t("common.buttons.moreActions")}</span>
+                    <span className="sm:hidden">{t("common.buttons.more")}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
                     onClick={() => router.push(`/products/${product.id}`)}
                   >
-                    View Details
+                    {t("common.buttons.viewDetails")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DeleteButton
@@ -111,7 +126,7 @@ export default function ProductDetailsPage({
                           e.preventDefault();
                         }}
                       >
-                        Delete Product
+                        {t("common.product.delete")}
                       </DropdownMenuItem>
                     }
                   />
@@ -120,27 +135,39 @@ export default function ProductDetailsPage({
             </div>
           </div>
 
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold">Sell History</h2>
-              <ViewSwitcher
-                view={historyViewMode}
-                onViewChange={setHistoryViewMode}
-              />
-            </div>
-            {historyViewMode === "table" ? (
-              <div className="overflow-x-auto -mx-4 sm:mx-0">
-                <div className="inline-block min-w-full px-4 sm:px-0">
-                  <SellHistoryTable history={product.sellHistory || []} />
+          <Accordion defaultOpen={false}>
+            <div className="border rounded-lg">
+              <AccordionTrigger className="px-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <h2 className="text-xl sm:text-2xl font-bold">
+                    {t("common.sellHistory.title")}
+                  </h2>
                 </div>
-              </div>
-            ) : (
-              <SellHistoryCards history={product.sellHistory || []} />
-            )}
-          </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    <ViewSwitcher
+                      view={historyViewMode}
+                      onViewChange={setHistoryViewMode}
+                    />
+                  </div>
+                  {historyViewMode === "table" ? (
+                    <div className="overflow-x-auto -mx-4 sm:mx-0">
+                      <div className="inline-block min-w-full px-4 sm:px-0">
+                        <SellHistoryTable history={product.sellHistory || []} />
+                      </div>
+                    </div>
+                  ) : (
+                    <SellHistoryCards history={product.sellHistory || []} />
+                  )}
+                </div>
+              </AccordionContent>
+            </div>
+          </Accordion>
         </div>
       </div>
     </div>
   );
 }
-

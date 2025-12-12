@@ -14,13 +14,19 @@ import { Label } from "@/components/ui/label";
 import { CalendarIcon, X } from "lucide-react";
 import { format, startOfDay, endOfDay, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export type DateRange = {
   from: Date | undefined;
   to?: Date | undefined;
 };
 
-export type DatePreset = "today" | "last7days" | "last30days" | "custom" | "all";
+export type DatePreset =
+  | "today"
+  | "last7days"
+  | "last30days"
+  | "custom"
+  | "all";
 
 interface DateRangePickerProps {
   value: DateRange;
@@ -37,6 +43,7 @@ export function DateRangePicker({
   onPresetChange,
   className,
 }: DateRangePickerProps) {
+  const { t } = useTranslation();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handlePresetChange = (newPreset: DatePreset) => {
@@ -77,39 +84,54 @@ export function DateRangePicker({
 
   const formatDateRange = () => {
     if (!value.from && !value.to) {
-      return "All time";
+      return t("common.dateRange.allTime");
     }
     if (value.from && value.to) {
       if (format(value.from, "yyyy-MM-dd") === format(value.to, "yyyy-MM-dd")) {
         return format(value.from, "MMM dd, yyyy");
       }
-      return `${format(value.from, "MMM dd")} - ${format(value.to, "MMM dd, yyyy")}`;
+      return `${format(value.from, "MMM dd")} - ${format(
+        value.to,
+        "MMM dd, yyyy"
+      )}`;
     }
     if (value.from) {
-      return `From ${format(value.from, "MMM dd, yyyy")}`;
+      return `${t("common.dateRange.from")} ${format(
+        value.from,
+        "MMM dd, yyyy"
+      )}`;
     }
     if (value.to) {
-      return `Until ${format(value.to, "MMM dd, yyyy")}`;
+      return `${t("common.dateRange.until")} ${format(
+        value.to,
+        "MMM dd, yyyy"
+      )}`;
     }
-    return "Select date range";
+    return t("common.dateRange.selectDateRange");
   };
 
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
         <Label className="text-sm font-medium whitespace-nowrap">
-          Date Range:
+          {t("common.dateRange.dateRange")}
         </Label>
         <Select value={preset} onValueChange={handlePresetChange}>
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All time</SelectItem>
-            <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="last7days">Last 7 days</SelectItem>
-            <SelectItem value="last30days">Last 30 days</SelectItem>
-            <SelectItem value="custom">Custom range</SelectItem>
+            <SelectItem value="all">{t("common.dateRange.allTime")}</SelectItem>
+            <SelectItem value="today">{t("common.dateRange.today")}</SelectItem>
+            <SelectItem value="last7days">
+              {t("common.dateRange.last7Days")}
+            </SelectItem>
+            <SelectItem value="last30days">
+              {t("common.dateRange.last30Days")}
+            </SelectItem>
+            <SelectItem value="custom">
+              {t("common.dateRange.customRange")}
+            </SelectItem>
           </SelectContent>
         </Select>
 
@@ -166,10 +188,9 @@ export function DateRangePicker({
 
       {preset !== "custom" && preset !== "all" && (
         <p className="text-xs text-muted-foreground">
-          Showing: {formatDateRange()}
+          {t("common.dateRange.showing")} {formatDateRange()}
         </p>
       )}
     </div>
   );
 }
-

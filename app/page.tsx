@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { useProducts } from "@/lib/hooks/use-products";
 import { CategoryCard } from "@/components/CategoryCard";
@@ -10,11 +11,14 @@ import { CategoryExportButton } from "@/components/CategoryExportButton";
 import { ImportButton } from "@/components/ImportButton";
 import { OverviewAnalytics } from "@/components/OverviewAnalytics";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { ViewSwitcher, type ViewMode } from "@/components/ViewSwitcher";
-import { Loader2, FolderTree, Plus } from "lucide-react";
+import { Loader2, FolderTree, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Home() {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const {
     data: categories,
@@ -42,9 +46,13 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-2">Error loading products</p>
+          <p className="text-destructive mb-2">
+            {t("common.errors.loadingProducts")}
+          </p>
           <p className="text-muted-foreground text-sm">
-            {error instanceof Error ? error.message : "Unknown error"}
+            {error instanceof Error
+              ? error.message
+              : t("common.errors.unknownError")}
           </p>
         </div>
       </div>
@@ -60,18 +68,25 @@ export default function Home() {
               <div className="flex items-center gap-2 mb-1 sm:mb-2">
                 <FolderTree className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8" />
                 <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold">
-                  Categories
+                  {t("common.categories")}
                 </h1>
               </div>
               <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
-                Select a category to view and manage products
+                {t("common.selectCategory")}
               </p>
             </div>
-            <div className="shrink-0">
+            <div className="shrink-0 flex items-center gap-2">
+              <LanguageToggle />
               <ThemeToggle />
             </div>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
+            <Link href="/quick-sell">
+              <Button>
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                {t("common.quickSell.title")}
+              </Button>
+            </Link>
             <CategoryManager />
             {categories && categories.length > 0 && (
               <>
@@ -107,13 +122,13 @@ export default function Home() {
           <div className="text-center py-12">
             <FolderTree className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground text-lg mb-4">
-              No categories yet. Create your first category to get started.
+              {t("common.noCategories")}
             </p>
             <CategoryManager
               trigger={
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Category
+                  {t("common.buttons.createCategory")}
                 </Button>
               }
             />

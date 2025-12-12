@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -39,6 +40,7 @@ interface CategoryCardProps {
 }
 
 export function CategoryCard({ category }: CategoryCardProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const productCount = category._count?.products ?? 0;
   const [isEditing, setIsEditing] = useState(false);
@@ -116,7 +118,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
                     className="h-10 w-10 sm:h-9 sm:w-9 p-0 touch-manipulation"
                     onClick={handleSaveEdit}
                     disabled={updateCategory.isPending}
-                    title="Save"
+                    title={t("common.buttons.save")}
                   >
                     {updateCategory.isPending ? (
                       <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin" />
@@ -129,7 +131,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
                     size="sm"
                     className="h-10 w-10 sm:h-9 sm:w-9 p-0 touch-manipulation"
                     onClick={handleCancelEdit}
-                    title="Cancel"
+                    title={t("common.buttons.cancel")}
                   >
                     <X className="h-5 w-5 sm:h-4 sm:w-4" />
                   </Button>
@@ -144,7 +146,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
                       e.stopPropagation();
                       setIsEditing(true);
                     }}
-                    title="Edit category"
+                    title={t("common.category.edit")}
                   >
                     <Edit className="h-5 w-5 sm:h-4 sm:w-4" />
                   </Button>
@@ -157,7 +159,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
                       setDeleteDialogOpen(true);
                     }}
                     disabled={deleteCategory.isPending}
-                    title="Delete category"
+                    title={t("common.category.delete")}
                   >
                     <Trash2 className="h-5 w-5 sm:h-4 sm:w-4 text-red-500" />
                   </Button>
@@ -170,7 +172,10 @@ export function CategoryCard({ category }: CategoryCardProps) {
           <div className="flex items-center gap-2 text-muted-foreground">
             <Package className="h-4 w-4 flex-shrink-0" />
             <span className="text-sm">
-              {productCount} product{productCount !== 1 ? "s" : ""}
+              {productCount}{" "}
+              {productCount !== 1
+                ? t("common.product.productsPlural")
+                : t("common.product.products")}
             </span>
           </div>
         </CardContent>
@@ -180,7 +185,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
             className="w-full h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
             size="default"
           >
-            View Products
+            {t("common.buttons.viewProducts")}
           </Button>
         </CardFooter>
       </Card>
@@ -189,19 +194,18 @@ export function CategoryCard({ category }: CategoryCardProps) {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Category</DialogTitle>
+            <DialogTitle>{t("common.category.deleteTitle")}</DialogTitle>
             <DialogDescription>
               {productCount > 0 ? (
                 <>
-                  Are you sure you want to delete "{category.name}"? This will
-                  permanently delete the category and all {productCount} product
-                  {productCount !== 1 ? "s" : ""} associated with it, including
-                  all sell history. This action cannot be undone.
+                  {t("common.category.deleteConfirmWithProducts", {
+                    name: category.name,
+                    count: productCount,
+                  })}
                 </>
               ) : (
                 <>
-                  Are you sure you want to delete "{category.name}"? This action
-                  cannot be undone.
+                  {t("common.category.deleteConfirm", { name: category.name })}
                 </>
               )}
             </DialogDescription>
@@ -212,7 +216,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
               variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
             >
-              Cancel
+              {t("common.buttons.cancel")}
             </Button>
             <Button
               type="button"
@@ -223,7 +227,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
               {deleteCategory.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Delete Permanently
+              {t("common.buttons.deletePermanently")}
             </Button>
           </DialogFooter>
         </DialogContent>

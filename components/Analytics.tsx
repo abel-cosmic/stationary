@@ -20,12 +20,14 @@ import {
 } from "@/components/DateRangePicker";
 import { AnalyticsExportButton } from "@/components/AnalyticsExportButton";
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface AnalyticsProps {
   products: Product[];
 }
 
 export function Analytics({ products }: AnalyticsProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
@@ -128,30 +130,30 @@ export function Analytics({ products }: AnalyticsProps) {
 
   const stats = [
     {
-      title: "Total Products",
+      title: t("common.analytics.totalProducts"),
       value: analytics.totalProducts,
       icon: Package,
-      description: "Products in inventory",
+      description: t("common.analytics.productsInInventory"),
     },
     {
-      title: "Today's Profit",
+      title: t("common.analytics.todaysProfit"),
       value: analytics.todayProfit,
       icon: Calendar,
-      description: "Profit from today's sales",
+      description: t("common.analytics.profitFromTodaysSales"),
       isProfit: true,
     },
     {
-      title: "Weekly Profit",
+      title: t("common.analytics.weeklyProfit"),
       value: analytics.weeklyProfit,
       icon: TrendingUp,
-      description: "Profit from last 7 days",
+      description: t("common.analytics.profitFromLast7Days"),
       isProfit: true,
     },
     {
-      title: "Total Profit",
+      title: t("common.analytics.totalProfit"),
       value: analytics.totalProfit,
       icon: DollarSign,
-      description: "Overall profit",
+      description: t("common.analytics.overallProfit"),
       isProfit: true,
     },
   ];
@@ -166,7 +168,7 @@ export function Analytics({ products }: AnalyticsProps) {
       >
         <span className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4" />
-          Analytics
+          {t("common.analytics.analytics")}
         </span>
         {isExpanded ? (
           <ChevronUp className="h-4 w-4" />

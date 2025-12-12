@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useDeleteProduct } from "@/lib/hooks/use-products";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface DeleteButtonProps {
   productId: number;
@@ -26,6 +27,7 @@ export function DeleteButton({
   productName,
   trigger,
 }: DeleteButtonProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const deleteProduct = useDeleteProduct();
   const router = useRouter();
@@ -49,20 +51,19 @@ export function DeleteButton({
             className=""
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {t("common.buttons.delete")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Delete Product</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">{t("common.product.delete")}</DialogTitle>
           <DialogDescription className="space-y-2 text-sm">
             <p>
-              Are you sure you want to delete "{productName}"? This action cannot
-              be undone.
+              {t("common.product.deleteConfirm", { name: productName })}
             </p>
             <p className="text-destructive font-medium">
-              All associated sell history will also be permanently deleted.
+              {t("common.product.deleteWarning")}
             </p>
           </DialogDescription>
         </DialogHeader>
@@ -73,7 +74,7 @@ export function DeleteButton({
             onClick={() => setOpen(false)}
             className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
           >
-            Cancel
+            {t("common.buttons.cancel")}
           </Button>
           <Button
             type="button"
@@ -85,7 +86,7 @@ export function DeleteButton({
             {deleteProduct.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Delete Permanently
+            {t("common.buttons.deletePermanently")}
           </Button>
         </DialogFooter>
       </DialogContent>

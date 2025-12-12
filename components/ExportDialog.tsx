@@ -16,12 +16,14 @@ import { Product } from "@/lib/api";
 import { exportToExcel } from "@/lib/excel-utils";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTranslation } from "react-i18next";
 
 interface ExportDialogProps {
   products: Product[];
 }
 
 export function ExportDialog({ products }: ExportDialogProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportOptions, setExportOptions] = useState({
@@ -32,7 +34,7 @@ export function ExportDialog({ products }: ExportDialogProps) {
 
   const handleExport = () => {
     if (products.length === 0) {
-      alert("No products to export");
+      alert(t("common.export.noProductsToExport"));
       return;
     }
 
@@ -42,7 +44,7 @@ export function ExportDialog({ products }: ExportDialogProps) {
       setOpen(false);
     } catch (error) {
       console.error("Export error:", error);
-      alert("Failed to export data. Please try again.");
+      alert(t("common.export.failedToExport"));
     } finally {
       setIsExporting(false);
     }
@@ -57,20 +59,20 @@ export function ExportDialog({ products }: ExportDialogProps) {
           className="flex items-center gap-2"
         >
           <Download className="h-4 w-4" />
-          <span className="hidden sm:inline">Export Excel</span>
-          <span className="sm:hidden">Export</span>
+          <span className="hidden sm:inline">{t("common.export.export")} Excel</span>
+          <span className="sm:hidden">{t("common.export.export")}</span>
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Export to Excel</DialogTitle>
+          <DialogTitle>{t("common.export.title")}</DialogTitle>
           <DialogDescription>
-            Select what data you want to export to Excel file.
+            {t("common.export.description")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Export Options</Label>
+            <Label className="text-base font-semibold">{t("common.export.exportOptions")}</Label>
             
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -84,9 +86,9 @@ export function ExportDialog({ products }: ExportDialogProps) {
                 htmlFor="export-products"
                 className="text-sm font-normal cursor-pointer"
               >
-                Product List
+                {t("common.export.productList")}
                 <span className="text-muted-foreground ml-2">
-                  ({products.length} products)
+                  ({products.length} {t("common.export.productsCount")})
                 </span>
               </Label>
             </div>
@@ -103,9 +105,9 @@ export function ExportDialog({ products }: ExportDialogProps) {
                 htmlFor="export-history"
                 className="text-sm font-normal cursor-pointer"
               >
-                Sell History
+                {t("common.export.sellHistory")}
                 <span className="text-muted-foreground ml-2">
-                  ({products.reduce((sum, p) => sum + (p.sellHistory?.length || 0), 0)} records)
+                  ({products.reduce((sum, p) => sum + (p.sellHistory?.length || 0), 0)} {t("common.export.records")})
                 </span>
               </Label>
             </div>
@@ -122,9 +124,9 @@ export function ExportDialog({ products }: ExportDialogProps) {
                 htmlFor="export-analytics"
                 className="text-sm font-normal cursor-pointer"
               >
-                Analytics Summary
+                {t("common.export.analyticsSummary")}
                 <span className="text-muted-foreground ml-2">
-                  (Total profit, daily/weekly stats)
+                  {t("common.export.analyticsDescription")}
                 </span>
               </Label>
             </div>
@@ -132,7 +134,7 @@ export function ExportDialog({ products }: ExportDialogProps) {
 
           {!exportOptions.products && !exportOptions.sellHistory && !exportOptions.analytics && (
             <p className="text-sm text-destructive">
-              Please select at least one option to export.
+              {t("common.export.selectAtLeastOne")}
             </p>
           )}
         </div>
@@ -143,7 +145,7 @@ export function ExportDialog({ products }: ExportDialogProps) {
             onClick={() => setOpen(false)}
             disabled={isExporting}
           >
-            Cancel
+            {t("common.buttons.cancel")}
           </Button>
           <Button
             type="button"
@@ -156,12 +158,12 @@ export function ExportDialog({ products }: ExportDialogProps) {
             {isExporting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Exporting...
+                {t("common.export.exporting")}
               </>
             ) : (
               <>
                 <Download className="mr-2 h-4 w-4" />
-                Export
+                {t("common.export.export")}
               </>
             )}
           </Button>

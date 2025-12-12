@@ -21,6 +21,7 @@ import {
 import { useCategories, useCreateCategory } from "@/lib/hooks/use-categories";
 import { Loader2, Plus } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "react-i18next";
 
 interface CategorySelectProps {
   value?: number | null;
@@ -31,12 +32,15 @@ interface CategorySelectProps {
 export function CategorySelect({
   value,
   onValueChange,
-  placeholder = "Select category",
+  placeholder,
 }: CategorySelectProps) {
+  const { t } = useTranslation();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const { data: categories, isLoading } = useCategories();
   const createCategory = useCreateCategory();
+
+  const defaultPlaceholder = placeholder || t("common.product.selectCategory");
 
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) return;
@@ -69,13 +73,15 @@ export function CategorySelect({
           }}
         >
           <SelectTrigger className="flex-1 h-11 sm:h-10 text-base sm:text-sm">
-            <SelectValue placeholder={placeholder} />
+            <SelectValue placeholder={defaultPlaceholder} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">None</SelectItem>
+            <SelectItem value="none">
+              {t("common.categorySelect.none")}
+            </SelectItem>
             {isLoading ? (
               <SelectItem value="loading" disabled>
-                Loading...
+                {t("common.categorySelect.loading")}
               </SelectItem>
             ) : (
               categories?.map((category) => (
@@ -100,19 +106,23 @@ export function CategorySelect({
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Create New Category</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">
+              {t("common.categorySelect.createNew")}
+            </DialogTitle>
             <DialogDescription className="text-sm">
-              Add a new category to organize your products.
+              {t("common.categorySelect.addNew")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="categoryName" className="text-sm font-medium">Category Name</Label>
+              <Label htmlFor="categoryName" className="text-sm font-medium">
+                {t("common.categorySelect.name")}
+              </Label>
               <Input
                 id="categoryName"
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="e.g., Pens, Notebooks, Office Supplies"
+                placeholder={t("common.categorySelect.namePlaceholder")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -133,7 +143,7 @@ export function CategorySelect({
               }}
               className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
             >
-              Cancel
+              {t("common.buttons.cancel")}
             </Button>
             <Button
               type="button"
@@ -144,7 +154,7 @@ export function CategorySelect({
               {createCategory.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Create
+              {t("common.buttons.create")}
             </Button>
           </DialogFooter>
         </DialogContent>

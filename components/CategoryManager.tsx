@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -12,25 +16,52 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { useCreateCategory } from "@/lib/hooks/use-categories";
 import { Loader2, FolderTree, Plus } from "lucide-react";
+
+const createCategorySchema = (t: (key: string) => string) =>
+  z.object({
+    name: z.string().min(1, t("common.category.nameRequired")).trim(),
+  });
+
+type CategoryFormValues = {
+  name: string;
+};
 
 interface CategoryManagerProps {
   trigger?: React.ReactNode;
 }
 
 export function CategoryManager({ trigger }: CategoryManagerProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
   const createCategory = useCreateCategory();
 
-  const handleCreate = async () => {
-    if (!newCategoryName.trim()) return;
+  const form = useForm<CategoryFormValues>({
+    resolver: zodResolver(createCategorySchema(t)),
+    defaultValues: {
+      name: "",
+    },
+  });
 
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      form.reset({ name: "" });
+    }
+  }, [open, form]);
+
+  const onSubmit = async (data: CategoryFormValues) => {
     try {
-      await createCategory.mutateAsync({ name: newCategoryName.trim() });
-      setNewCategoryName("");
+      await createCategory.mutateAsync({ name: data.name });
       setOpen(false);
     } catch (error) {
       console.error("Error creating category:", error);
@@ -43,66 +74,76 @@ export function CategoryManager({ trigger }: CategoryManagerProps) {
         {trigger || (
           <Button variant="outline">
             <Plus className="mr-2 h-4 w-4" />
-            Create Category
+            {t("common.buttons.createCategory")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">
-            Create New Category
+            {t("common.category.createNew")}
           </DialogTitle>
           <DialogDescription className="text-sm">
-            Add a new category to organize your products.
+            {t("common.category.addNew")}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="newCategory" className="text-sm font-medium">
-              Category Name
-            </Label>
-            <Input
-              id="newCategory"
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              placeholder="e.g., Pens, Notebooks, Office Supplies"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleCreate();
-                }
-              }}
-              className="h-11 sm:h-10 text-base sm:text-sm"
-              autoFocus
-            />
-          </div>
-        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="space-y-4 py-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      {t("common.category.name")}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder={t("common.category.namePlaceholder")}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            form.handleSubmit(onSubmit)();
+                          }
+                        }}
+                        className="h-11 sm:h-10 text-base sm:text-sm"
+                        autoFocus
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setOpen(false);
-              setNewCategoryName("");
-            }}
-            className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={handleCreate}
-            disabled={!newCategoryName.trim() || createCategory.isPending}
-            className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
-          >
-            {createCategory.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Create Category
-          </Button>
-        </DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setOpen(false);
+                  form.reset({ name: "" });
+                }}
+                className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
+              >
+                {t("common.buttons.cancel")}
+              </Button>
+              <Button
+                type="submit"
+                disabled={createCategory.isPending}
+                className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
+              >
+                {createCategory.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {t("common.buttons.createCategory")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

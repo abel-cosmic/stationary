@@ -21,12 +21,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { EditProductDialog } from "@/components/EditProductDialog";
 import { DeleteButton } from "@/components/DeleteButton";
+import { useTranslation } from "react-i18next";
 
 interface ProductTableProps {
   products: Product[];
 }
 
 export function ProductTable({ products }: ProductTableProps) {
+  const { t } = useTranslation();
   const router = useRouter();
 
   return (
@@ -34,14 +36,24 @@ export function ProductTable({ products }: ProductTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="min-w-[150px]">Name</TableHead>
-            <TableHead className="hidden sm:table-cell">Category</TableHead>
-            <TableHead className="hidden sm:table-cell">Quantity</TableHead>
-            <TableHead className="hidden md:table-cell">
-              Selling Price
+            <TableHead className="min-w-[150px]">
+              {t("common.table.name")}
             </TableHead>
-            <TableHead className="hidden lg:table-cell">Profit</TableHead>
-            <TableHead className="text-right min-w-[120px]">Actions</TableHead>
+            <TableHead className="hidden sm:table-cell">
+              {t("common.table.category")}
+            </TableHead>
+            <TableHead className="hidden sm:table-cell">
+              {t("common.table.quantity")}
+            </TableHead>
+            <TableHead className="hidden md:table-cell">
+              {t("common.table.sellingPrice")}
+            </TableHead>
+            <TableHead className="hidden lg:table-cell">
+              {t("common.table.profit")}
+            </TableHead>
+            <TableHead className="text-right min-w-[120px]">
+              {t("common.table.actions")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -59,14 +71,20 @@ export function ProductTable({ products }: ProductTableProps) {
                         {product.category.name}
                       </span>
                     )}
-                    <span>Qty: {product.quantity}</span>
-                    <span>Price: {product.sellingPrice.toFixed(2)} ETB</span>
+                    <span>
+                      {t("common.table.qty")}: {product.quantity}
+                    </span>
+                    <span>
+                      {t("common.table.price")}:{" "}
+                      {product.sellingPrice.toFixed(2)} ETB
+                    </span>
                     <span
                       className={
                         product.profit >= 0 ? "text-green-400" : "text-red-400"
                       }
                     >
-                      Profit: {product.profit.toFixed(2)} ETB
+                      {t("common.table.profit")}: {product.profit.toFixed(2)}{" "}
+                      ETB
                     </span>
                   </div>
                 </div>
@@ -106,7 +124,7 @@ export function ProductTable({ products }: ProductTableProps) {
                     size="sm"
                     onClick={() => router.push(`/products/${product.id}`)}
                     className="h-10 w-10 sm:h-9 sm:w-9 p-0 touch-manipulation"
-                    title="View Details"
+                    title={t("common.buttons.viewDetails")}
                   >
                     <Eye className="h-5 w-5 sm:h-4 sm:w-4" />
                   </Button>
@@ -117,7 +135,7 @@ export function ProductTable({ products }: ProductTableProps) {
                         variant="ghost"
                         size="sm"
                         className="h-10 w-10 sm:h-9 sm:w-9 p-0 touch-manipulation"
-                        title="Edit Product"
+                        title={t("common.product.edit")}
                       >
                         <Edit className="h-5 w-5 sm:h-4 sm:w-4" />
                       </Button>
@@ -131,7 +149,7 @@ export function ProductTable({ products }: ProductTableProps) {
                         variant="ghost"
                         size="sm"
                         className="h-10 w-10 sm:h-9 sm:w-9 p-0 text-destructive hover:text-destructive touch-manipulation"
-                        title="Delete Product"
+                        title={t("common.product.delete")}
                       >
                         <Trash2 className="h-5 w-5 sm:h-4 sm:w-4" />
                       </Button>
