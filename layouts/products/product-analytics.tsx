@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/lib/api";
+import type { Product } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,

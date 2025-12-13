@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -23,11 +24,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useUpdateProduct } from "@/lib/hooks/use-products";
-import { Product } from "@/lib/api";
-import { CategorySelect } from "@/components/CategorySelect";
-import { Loader2, Edit } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useCreateProduct } from "@/lib/hooks/use-products";
+import { CategorySelect } from "@/layouts/common/category-select";
+import { Loader2, Plus } from "lucide-react";
 
 const createProductSchema = (t: (key: string) => string) =>
   z.object({
@@ -55,60 +54,64 @@ type ProductFormValues = {
   categoryId: number | null | undefined;
 };
 
-interface EditProductDialogProps {
-  product: Product;
+interface CreateProductDialogProps {
   trigger?: React.ReactNode;
+  categoryId?: number;
 }
 
-export function EditProductDialog({
-  product,
+export function CreateProductDialog({
   trigger,
-}: EditProductDialogProps) {
+  categoryId,
+}: CreateProductDialogProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const updateProduct = useUpdateProduct();
+  const createProduct = useCreateProduct();
 
   const schema = useMemo(() => createProductSchema(t), [t]);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(schema) as any,
     defaultValues: {
-      name: product.name,
-      initialPrice: product.initialPrice,
-      sellingPrice: product.sellingPrice,
-      quantity: product.quantity,
-      categoryId: product.categoryId ?? null,
+      name: "",
+      initialPrice: 0,
+      sellingPrice: 0,
+      quantity: 0,
+      categoryId: categoryId ?? null,
     },
   });
 
-  // Reset form when dialog opens or product changes
+  // Update categoryId when prop changes
   useEffect(() => {
-    if (open) {
+    if (categoryId !== undefined) {
+      form.setValue("categoryId", categoryId ?? null);
+    }
+  }, [categoryId, form]);
+
+  // Reset form when dialog opens/closes
+  useEffect(() => {
+    if (!open) {
       form.reset({
-        name: product.name,
-        initialPrice: product.initialPrice,
-        sellingPrice: product.sellingPrice,
-        quantity: product.quantity,
-        categoryId: product.categoryId ?? null,
+        name: "",
+        initialPrice: 0,
+        sellingPrice: 0,
+        quantity: 0,
+        categoryId: categoryId ?? null,
       });
     }
-  }, [open, product, form]);
+  }, [open, categoryId, form]);
 
   const onSubmit = async (data: ProductFormValues) => {
     try {
-      await updateProduct.mutateAsync({
-        id: product.id,
-        data: {
-          name: data.name,
-          initialPrice: data.initialPrice,
-          sellingPrice: data.sellingPrice,
-          quantity: data.quantity,
-          categoryId: data.categoryId,
-        },
+      await createProduct.mutateAsync({
+        name: data.name,
+        initialPrice: data.initialPrice,
+        sellingPrice: data.sellingPrice,
+        quantity: data.quantity,
+        categoryId: data.categoryId,
       });
       setOpen(false);
     } catch (error) {
-      console.error("Error updating product:", error);
+      console.error("Error creating product:", error);
     }
   };
 
@@ -116,19 +119,19 @@ export function EditProductDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline">
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("common.buttons.createProduct")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">
-            {t("common.product.edit")}
+            {t("common.product.createNew")}
           </DialogTitle>
           <DialogDescription className="text-sm">
-            {t("common.product.update")}
+            {t("common.product.addNew")}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -162,7 +165,7 @@ export function EditProductDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium">
-                      Initial Price
+                      {t("common.product.initialPrice")}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -224,25 +227,27 @@ export function EditProductDialog({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="categoryId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">
-                      {t("common.product.category")}
-                    </FormLabel>
-                    <FormControl>
-                      <CategorySelect
-                        value={field.value ?? null}
-                        onValueChange={field.onChange}
-                        placeholder={t("common.product.selectCategory")}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {categoryId === undefined && (
+                <FormField
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">
+                        {t("common.product.category")}
+                      </FormLabel>
+                      <FormControl>
+                        <CategorySelect
+                          value={field.value ?? null}
+                          onValueChange={field.onChange}
+                          placeholder={t("common.product.selectCategory")}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
             <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
               <Button
@@ -255,13 +260,13 @@ export function EditProductDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={updateProduct.isPending}
+                disabled={createProduct.isPending}
                 className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
               >
-                {updateProduct.isPending && (
+                {createProduct.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {t("common.buttons.saveChanges")}
+                {t("common.buttons.createProduct")}
               </Button>
             </DialogFooter>
           </form>

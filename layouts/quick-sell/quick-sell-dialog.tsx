@@ -37,9 +37,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CategorySelect } from "@/components/CategorySelect";
+import { CategorySelect } from "@/layouts/common/category-select";
 import { useProducts, useSellProduct } from "@/lib/hooks/use-products";
-import { Product, SellHistory } from "@/lib/api";
+import type { Product, SellHistory } from "@/types/api";
 import { Loader2, ShoppingCart, Download, FileText } from "lucide-react";
 import { format } from "date-fns";
 import {

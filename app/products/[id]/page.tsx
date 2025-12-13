@@ -2,16 +2,17 @@
 
 import { use, useState } from "react";
 import { useProduct } from "@/lib/hooks/use-products";
-import { ProductSummaryCard } from "@/components/ProductSummaryCard";
-import { ProductAnalytics } from "@/components/ProductAnalytics";
-import { SellProductDialog } from "@/components/SellProductDialog";
-import { EditProductDialog } from "@/components/EditProductDialog";
-import { DeleteButton } from "@/components/DeleteButton";
-import { SellHistoryTable } from "@/components/SellHistoryTable";
-import { SellHistoryCards } from "@/components/SellHistoryCards";
-import { ViewSwitcher, type ViewMode } from "@/components/ViewSwitcher";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { ProductSummaryCard } from "@/layouts/products/product-summary-card";
+import { ProductAnalytics } from "@/layouts/products/product-analytics";
+import { SellProductDialog } from "@/layouts/products/sell-product-dialog";
+import { EditProductDialog } from "@/layouts/products/edit-product-dialog";
+import { DeleteButton } from "@/layouts/products/delete-button";
+import { SellHistoryTable } from "@/layouts/products/sell-history-table";
+import { SellHistoryCards } from "@/layouts/products/sell-history-cards";
+import { ViewSwitcher } from "@/layouts/products/view-switcher";
+import type { ViewMode } from "@/types/common";
+import { ThemeToggle } from "@/layouts/common/theme-toggle";
+import { LanguageToggle } from "@/layouts/common/language-toggle";
 import {
   Accordion,
   AccordionContent,
@@ -54,7 +55,9 @@ export default function ProductDetailsPage({
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-2">{t("common.errors.productNotFound")}</p>
+          <p className="text-destructive mb-2">
+            {t("common.errors.productNotFound")}
+          </p>
           <Button onClick={() => router.push("/")} className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t("common.backToHome")}
@@ -105,8 +108,12 @@ export default function ProductDetailsPage({
                     className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
                   >
                     <MoreVertical className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">{t("common.buttons.moreActions")}</span>
-                    <span className="sm:hidden">{t("common.buttons.more")}</span>
+                    <span className="hidden sm:inline">
+                      {t("common.buttons.moreActions")}
+                    </span>
+                    <span className="sm:hidden">
+                      {t("common.buttons.more")}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

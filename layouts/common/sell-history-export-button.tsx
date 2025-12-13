@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
-import { Product, SellHistory } from "@/lib/api";
+import type { Product, SellHistory } from "@/types/api";
 import { exportSellHistoryToExcel } from "@/lib/excel-utils";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";

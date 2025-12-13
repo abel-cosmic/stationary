@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Category } from "@/lib/api";
+import type { Category } from "@/types/api";
 import { useRouter } from "next/navigation";
 import {
   useUpdateCategory,

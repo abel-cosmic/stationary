@@ -3,15 +3,16 @@
 import { use, useState, useMemo } from "react";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { useProducts } from "@/lib/hooks/use-products";
-import { ProductCard } from "@/components/ProductCard";
-import { ProductTable } from "@/components/ProductTable";
-import { SearchBar } from "@/components/SearchBar";
-import { CreateProductDialog } from "@/components/CreateProductDialog";
-import { ExportDialog } from "@/components/ExportDialog";
-import { ViewSwitcher, type ViewMode } from "@/components/ViewSwitcher";
-import { CategoryAnalytics } from "@/components/CategoryAnalytics";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { ProductCard } from "@/layouts/categories/product-card";
+import { ProductTable } from "@/layouts/categories/product-table";
+import { SearchBar } from "@/layouts/categories/search-bar";
+import { CreateProductDialog } from "@/layouts/categories/create-product-dialog";
+import { ExportDialog } from "@/layouts/categories/export-dialog";
+import { ViewSwitcher } from "@/layouts/categories/view-switcher";
+import type { ViewMode } from "@/types/common";
+import { CategoryAnalytics } from "@/layouts/categories/category-analytics";
+import { ThemeToggle } from "@/layouts/common/theme-toggle";
+import { LanguageToggle } from "@/layouts/common/language-toggle";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, FolderTree } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -66,7 +67,9 @@ export default function CategoryProductsPage({
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-2">
-            {error ? t("common.errors.loadingProducts") : t("common.errors.categoryNotFound")}
+            {error
+              ? t("common.errors.loadingProducts")
+              : t("common.errors.categoryNotFound")}
           </p>
           <Button onClick={() => router.push("/")} className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />

@@ -2,33 +2,33 @@
 
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
-import { Product } from "@/lib/api";
-import { exportAnalyticsToExcel } from "@/lib/excel-utils";
+import type { Category } from "@/types/api";
+import { exportCategoriesToExcel } from "@/lib/excel-utils";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-interface AnalyticsExportButtonProps {
-  products: Product[];
+interface CategoryExportButtonProps {
+  categories: Category[];
 }
 
-export function AnalyticsExportButton({
-  products,
-}: AnalyticsExportButtonProps) {
+export function CategoryExportButton({
+  categories,
+}: CategoryExportButtonProps) {
   const { t } = useTranslation();
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = () => {
-    if (products.length === 0) {
-      alert(t("common.export.noProductsForAnalytics"));
+    if (categories.length === 0) {
+      alert(t("common.export.noCategoriesToExport"));
       return;
     }
 
     setIsExporting(true);
     try {
-      exportAnalyticsToExcel(products);
+      exportCategoriesToExcel(categories);
     } catch (error) {
       console.error("Export error:", error);
-      alert(t("common.export.failedToExportAnalytics"));
+      alert(t("common.export.failedToExport"));
     } finally {
       setIsExporting(false);
     }
@@ -37,9 +37,8 @@ export function AnalyticsExportButton({
   return (
     <Button
       onClick={handleExport}
-      disabled={isExporting || products.length === 0}
+      disabled={isExporting || categories.length === 0}
       variant="outline"
-      size="sm"
       className="flex items-center gap-2"
     >
       {isExporting ? (
@@ -53,7 +52,7 @@ export function AnalyticsExportButton({
         <>
           <Download className="h-4 w-4" />
           <span className="hidden sm:inline">
-            {t("common.export.exportAnalytics")}
+            {t("common.export.exportCategories")}
           </span>
           <span className="sm:hidden">{t("common.export.export")}</span>
         </>

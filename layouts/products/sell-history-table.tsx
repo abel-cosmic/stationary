@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SellHistory } from "@/lib/api";
+import type { SellHistory } from "@/types/api";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 

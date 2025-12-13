@@ -1,31 +1,30 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Download, Loader2 } from "lucide-react";
-import { Category } from "@/lib/api";
-import { exportCategoriesToExcel } from "@/lib/excel-utils";
+import { Download } from "lucide-react";
+import type { Product } from "@/types/api";
+import { exportToExcel } from "@/lib/excel-utils";
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-interface CategoryExportButtonProps {
-  categories: Category[];
+interface ExportButtonProps {
+  products: Product[];
 }
 
-export function CategoryExportButton({
-  categories,
-}: CategoryExportButtonProps) {
+export function ExportButton({ products }: ExportButtonProps) {
   const { t } = useTranslation();
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = () => {
-    if (categories.length === 0) {
-      alert(t("common.export.noCategoriesToExport"));
+    if (products.length === 0) {
+      alert(t("common.export.noProductsToExport"));
       return;
     }
 
     setIsExporting(true);
     try {
-      exportCategoriesToExcel(categories);
+      exportToExcel(products);
     } catch (error) {
       console.error("Export error:", error);
       alert(t("common.export.failedToExport"));
@@ -37,7 +36,7 @@ export function CategoryExportButton({
   return (
     <Button
       onClick={handleExport}
-      disabled={isExporting || categories.length === 0}
+      disabled={isExporting || products.length === 0}
       variant="outline"
       className="flex items-center gap-2"
     >
@@ -52,7 +51,7 @@ export function CategoryExportButton({
         <>
           <Download className="h-4 w-4" />
           <span className="hidden sm:inline">
-            {t("common.export.exportCategories")}
+            {t("common.export.export")} Excel
           </span>
           <span className="sm:hidden">{t("common.export.export")}</span>
         </>

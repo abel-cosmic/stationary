@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Product } from "@/lib/api";
+import type { Product } from "@/types/api";
 import { useRouter } from "next/navigation";
 import {
   Package,
@@ -19,8 +19,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EditProductDialog } from "@/components/EditProductDialog";
-import { DeleteButton } from "@/components/DeleteButton";
+import { EditProductDialog } from "@/layouts/products/edit-product-dialog";
+import { DeleteButton } from "@/layouts/products/delete-button";
 import { useTranslation } from "react-i18next";
 
 interface ProductTableProps {

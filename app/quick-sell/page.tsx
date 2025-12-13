@@ -15,13 +15,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CategorySelect } from "@/components/CategorySelect";
+import { CategorySelect } from "@/layouts/common/category-select";
 import {
   useProducts,
   useSellProduct,
   useBulkSell,
 } from "@/lib/hooks/use-products";
-import { Product, SellHistory } from "@/lib/api";
+import type { Product, SellHistory } from "@/types/api";
 import {
   Loader2,
   ShoppingCart,
@@ -46,24 +46,11 @@ import {
   generateSalesReport,
 } from "@/lib/excel-utils";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { ThemeToggle } from "@/layouts/common/theme-toggle";
+import { LanguageToggle } from "@/layouts/common/language-toggle";
 import { useTranslation } from "react-i18next";
 
-type SalesTab = "today" | "weekly" | "allTime";
-
-interface CartItem {
-  productId: number;
-  product: Product;
-  amount: number;
-  soldPrice: number;
-}
-
-interface SelectedProduct {
-  productId: number;
-  amount: number;
-  soldPrice: number;
-}
+import type { SalesTab, CartItem, SelectedProduct } from "@/types/quick-sell";
 
 export default function QuickSellPage() {
   const { t } = useTranslation();

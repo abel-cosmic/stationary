@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { I18nProvider } from "@/components/providers/i18n-provider";
-import { LangUpdater } from "@/components/LangUpdater";
+import { LangUpdater } from "@/layouts/common/lang-updater";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

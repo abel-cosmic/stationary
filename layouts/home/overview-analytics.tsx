@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Product, Category } from "@/lib/api";
+import type { Product, Category } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,

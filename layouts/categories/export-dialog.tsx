@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Download, Loader2 } from "lucide-react";
-import { Product } from "@/lib/api";
+import type { Product } from "@/types/api";
 import { exportToExcel } from "@/lib/excel-utils";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -172,4 +172,3 @@ export function ExportDialog({ products }: ExportDialogProps) {
     </Dialog>
   );
 }
-

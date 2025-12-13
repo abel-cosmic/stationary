@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { LayoutGrid, Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-
-export type ViewMode = "card" | "table";
+import type { ViewMode } from "@/types/common";
 
 interface ViewSwitcherProps {
   view: ViewMode;

@@ -1,6 +1,6 @@
 "use client";
 
-import { SellHistory } from "@/lib/api";
+import type { SellHistory } from "@/types/api";
 import { format } from "date-fns";
 import { Calendar, Package, DollarSign } from "lucide-react";
 import { useTranslation } from "react-i18next";

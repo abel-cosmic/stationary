@@ -1,11 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Product } from "@/lib/api";
+import type { Product } from "@/types/api";
 import { useRouter } from "next/navigation";
 import { Package, DollarSign, TrendingUp, Edit, Trash2 } from "lucide-react";
-import { EditProductDialog } from "@/components/EditProductDialog";
-import { DeleteButton } from "@/components/DeleteButton";
+import { EditProductDialog } from "@/layouts/products/edit-product-dialog";
+import { DeleteButton } from "@/layouts/products/delete-button";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 

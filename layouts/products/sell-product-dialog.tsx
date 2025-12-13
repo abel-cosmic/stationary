@@ -24,7 +24,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useSellProduct } from "@/lib/hooks/use-products";
-import { Product } from "@/lib/api";
+import type { Product } from "@/types/api";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 

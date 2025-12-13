@@ -1,14 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore - xlsx types may not be available
 import * as XLSX from "xlsx";
-import { Product, Category, SellHistory } from "./api";
+import type { Product, Category, SellHistory } from "@/types/api";
+import type { ExportOptions } from "@/types/common";
 import { format } from "date-fns";
-
-interface ExportOptions {
-  products?: boolean;
-  sellHistory?: boolean;
-  analytics?: boolean;
-}
 
 export function exportToExcel(
   products: Product[],
