@@ -8,9 +8,11 @@ import {
   updateProduct,
   deleteProduct,
   sellProduct,
+  bulkSell,
   type CreateProductData,
   type UpdateProductData,
   type SellProductData,
+  type BulkSellRequest,
 } from "@/lib/api";
 
 export function useProducts() {
@@ -76,6 +78,18 @@ export function useSellProduct() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["products", variables.id] });
+    },
+  });
+}
+
+export function useBulkSell() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: BulkSellRequest) => bulkSell(data),
+    onSuccess: () => {
+      // Invalidate all products since multiple products may have been updated
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
 }

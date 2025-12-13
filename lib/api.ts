@@ -37,7 +37,10 @@ export interface SellHistory {
   amount: number;
   soldPrice: number;
   totalPrice: number;
+  initialPrice: number; // Price at time of sale
+  transactionId?: number | null;
   createdAt: string;
+  product?: Product; // Included when fetched with relations
 }
 
 export interface CreateProductData {
@@ -59,6 +62,24 @@ export interface UpdateProductData {
 export interface SellProductData {
   amount: number;
   soldPrice: number;
+}
+
+export interface Transaction {
+  id: number;
+  totalRevenue: number;
+  totalProfit: number;
+  createdAt: string;
+  sellHistory?: SellHistory[];
+}
+
+export interface BulkSellItem {
+  productId: number;
+  amount: number;
+  soldPrice: number;
+}
+
+export interface BulkSellRequest {
+  items: BulkSellItem[];
 }
 
 export const getProducts = async (): Promise<Product[]> => {
@@ -130,3 +151,7 @@ export const deleteCategory = async (id: number): Promise<void> => {
   await api.delete(`/categories/${id}`);
 };
 
+export const bulkSell = async (data: BulkSellRequest): Promise<Transaction> => {
+  const response = await api.post<Transaction>("/sell/bulk", data);
+  return response.data;
+};

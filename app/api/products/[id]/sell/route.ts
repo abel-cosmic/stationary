@@ -63,13 +63,14 @@ export async function POST(
         },
       });
 
-      // Create sell history record
+      // Create sell history record with initialPrice at time of sale
       await tx.sellHistory.create({
         data: {
           productId: productId,
           amount: amount,
           soldPrice: soldPrice,
           totalPrice: revenueIncrease,
+          initialPrice: product.initialPrice, // Store price at time of sale
         },
       });
     });

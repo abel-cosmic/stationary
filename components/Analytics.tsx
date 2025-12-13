@@ -78,8 +78,9 @@ export function Analytics({ products }: AnalyticsProps) {
         product.sellHistory.forEach((history) => {
           const sellDate = new Date(history.createdAt);
 
-          // Calculate profit for this specific sale
-          const initialCost = product.initialPrice * history.amount;
+          // Calculate profit for this specific sale using historical price
+          const initialPrice = history.initialPrice || product.initialPrice;
+          const initialCost = initialPrice * history.amount;
           const saleProfit = history.totalPrice - initialCost;
 
           // Check if sale is today (same day, ignoring time)

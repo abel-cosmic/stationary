@@ -112,7 +112,22 @@
       "thisPeriod": "ይህ ጊዜ",
       "total": "ጠቅላላ",
       "exportError": "የቀን ሽያጭ ማስላክ አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
-      "reportError": "የሽያጭ ሪፖርት መፍጠር አልተሳካም። እባክዎ እንደገና ይሞክሩ።"
+      "reportError": "የሽያጭ ሪፖርት መፍጠር አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+      "addToCart": "ወደ ጋሪ ጨምር",
+      "sellNow": "አሁኑኑ ይሽጡ",
+      "cart": "ጋሪ",
+      "emptyCart": "ጋሪዎ ባዶ ነው",
+      "addProductsHint": "ከላይ ምርቶችን ይምረጡ እና 'ወደ ጋሪ ጨምር' ይጫኑ ግብይትዎን ለመገንባት",
+      "clearCart": "ጋሪ አጽዳ",
+      "totalItems": "ጠቅላላ እቃዎች",
+      "completeTransaction": "ግብይት ሙሉ አድርግ",
+      "cartHasItems": "{{count}} እቃ(ዎች) በጋሪ ውስጥ። ተጨማሪ ምርቶችን ያክሉ ወይም ግብይቱን ያጠናቅቁ።",
+      "selectMultipleProducts": "በአንድ ጊዜ ለመሸጥ በርካታ ምርቶችን ይምረጡ",
+      "clearSelection": "ምርጫ አጽዳ",
+      "selectedProducts": "የተመረጡ ምርቶች",
+      "addSelectedToCart": "የተመረጡትን ወደ ጋሪ ጨምር",
+      "sellSelected": "የተመረጡትን ይሽጡ",
+      "selectCategoryFirst": "እባክዎ ምርቶችን ለመመልከት ምድብ ይምረጡ"
     },
     "import": {
       "importExcel": "ኤክሴል ላክ",

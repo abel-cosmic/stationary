@@ -7,21 +7,6 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -29,8 +14,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CategorySelect } from "@/components/CategorySelect";
-import { useProducts, useSellProduct } from "@/lib/hooks/use-products";
+import {
+  useProducts,
+  useSellProduct,
+  useBulkSell,
+} from "@/lib/hooks/use-products";
 import { Product, SellHistory } from "@/lib/api";
 import {
   Loader2,
@@ -40,6 +30,9 @@ import {
   ArrowLeft,
   Calendar,
   Clock,
+  Plus,
+  X,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -59,14 +52,32 @@ import { useTranslation } from "react-i18next";
 
 type SalesTab = "today" | "weekly" | "allTime";
 
+interface CartItem {
+  productId: number;
+  product: Product;
+  amount: number;
+  soldPrice: number;
+}
+
+interface SelectedProduct {
+  productId: number;
+  amount: number;
+  soldPrice: number;
+}
+
 export default function QuickSellPage() {
   const { t } = useTranslation();
   const [isExportingDaily, setIsExportingDaily] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [activeTab, setActiveTab] = useState<SalesTab>("today");
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<
+    Map<number, SelectedProduct>
+  >(new Map());
 
-  const { data: products, isLoading: productsLoading } = useProducts();
+  const { data: products } = useProducts();
   const sellProduct = useSellProduct();
+  const bulkSell = useBulkSell();
 
   const sellSchema = useMemo(
     () =>
@@ -154,7 +165,7 @@ export default function QuickSellPage() {
     }
   }, [selectedProduct, form]);
 
-  // Get all sell history from products
+  // Get all sell history from products, grouped by transaction
   const allSellHistory = useMemo(() => {
     if (!products) return [];
     const history: (SellHistory & { product: Product })[] = [];
@@ -219,7 +230,8 @@ export default function QuickSellPage() {
       0
     );
     const totalProfit = filteredSellHistory.reduce((sum, item) => {
-      const initialCost = item.product.initialPrice * item.amount;
+      const initialPrice = item.initialPrice || item.product.initialPrice;
+      const initialCost = initialPrice * item.amount;
       return sum + (item.totalPrice - initialCost);
     }, 0);
     const totalTransactions = filteredSellHistory.length;
@@ -234,22 +246,155 @@ export default function QuickSellPage() {
     };
   }, [filteredSellHistory, activeTab]);
 
-  const onSubmit = async (data: SellFormValues) => {
-    if (!selectedProduct) {
-      return;
+  // Toggle product selection
+  const toggleProductSelection = (productId: number) => {
+    const product = products?.find((p) => p.id === productId);
+    if (!product) return;
+
+    const newSelected = new Map(selectedProducts);
+    if (newSelected.has(productId)) {
+      newSelected.delete(productId);
+    } else {
+      newSelected.set(productId, {
+        productId,
+        amount: 1,
+        soldPrice: product.sellingPrice,
+      });
+    }
+    setSelectedProducts(newSelected);
+  };
+
+  // Update selected product amount or price
+  const updateSelectedProduct = (
+    productId: number,
+    field: "amount" | "soldPrice",
+    value: number
+  ) => {
+    const newSelected = new Map(selectedProducts);
+    const current = newSelected.get(productId);
+    if (current) {
+      newSelected.set(productId, {
+        ...current,
+        [field]: value,
+      });
+      setSelectedProducts(newSelected);
+    }
+  };
+
+  // Add all selected products to cart
+  const addSelectedToCart = () => {
+    if (!products || selectedProducts.size === 0) return;
+
+    const newCartItems: CartItem[] = [];
+    selectedProducts.forEach((selected, productId) => {
+      const product = products.find((p) => p.id === productId);
+      if (product && selected.amount > 0 && selected.soldPrice > 0) {
+        // Check if already in cart
+        const existingIndex = cart.findIndex(
+          (item) => item.productId === productId
+        );
+        if (existingIndex >= 0) {
+          // Update existing
+          const updatedCart = [...cart];
+          updatedCart[existingIndex] = {
+            ...updatedCart[existingIndex],
+            amount: selected.amount,
+            soldPrice: selected.soldPrice,
+          };
+          setCart(updatedCart);
+        } else {
+          newCartItems.push({
+            productId,
+            product,
+            amount: selected.amount,
+            soldPrice: selected.soldPrice,
+          });
+        }
+      }
+    });
+
+    if (newCartItems.length > 0) {
+      setCart([...cart, ...newCartItems]);
     }
 
+    // Clear selections
+    setSelectedProducts(new Map());
+  };
+
+  // Sell all selected products directly
+  const sellSelectedProducts = async () => {
+    if (!products || selectedProducts.size === 0) return;
+
+    const items = Array.from(selectedProducts.values())
+      .filter((selected) => {
+        const product = products.find((p) => p.id === selected.productId);
+        return (
+          product &&
+          selected.amount > 0 &&
+          selected.soldPrice > 0 &&
+          selected.amount <= product.quantity
+        );
+      })
+      .map((selected) => ({
+        productId: selected.productId,
+        amount: selected.amount,
+        soldPrice: selected.soldPrice,
+      }));
+
+    if (items.length === 0) return;
+
     try {
-      await sellProduct.mutateAsync({
-        id: data.selectedProductId,
-        data: { amount: data.amount, soldPrice: data.soldPrice },
-      });
-      // Reset form after successful sale
-      form.setValue("amount", 0);
-      form.setValue("soldPrice", selectedProduct.sellingPrice);
-      // Products will automatically refetch due to query invalidation
+      await bulkSell.mutateAsync({ items });
+      setSelectedProducts(new Map());
     } catch (error) {
-      console.error("Error selling product:", error);
+      console.error("Error selling products:", error);
+    }
+  };
+
+  // Remove item from cart
+  const removeFromCart = (productId: number) => {
+    setCart(cart.filter((item) => item.productId !== productId));
+  };
+
+  // Clear cart
+  const clearCart = () => {
+    setCart([]);
+  };
+
+  // Calculate cart totals
+  const cartTotals = useMemo(() => {
+    const totalRevenue = cart.reduce(
+      (sum, item) => sum + item.amount * item.soldPrice,
+      0
+    );
+    const totalProfit = cart.reduce((sum, item) => {
+      const initialCost = item.product.initialPrice * item.amount;
+      const revenue = item.amount * item.soldPrice;
+      return sum + (revenue - initialCost);
+    }, 0);
+    const totalQuantity = cart.reduce((sum, item) => sum + item.amount, 0);
+
+    return { totalRevenue, totalProfit, totalQuantity };
+  }, [cart]);
+
+  // Submit cart as transaction
+  const handleSubmitCart = async () => {
+    if (cart.length === 0) return;
+
+    try {
+      await bulkSell.mutateAsync({
+        items: cart.map((item) => ({
+          productId: item.productId,
+          amount: item.amount,
+          soldPrice: item.soldPrice,
+        })),
+      });
+      // Clear cart after successful transaction
+      setCart([]);
+      // Reset form
+      form.reset();
+    } catch (error) {
+      console.error("Error processing transaction:", error);
     }
   };
 
@@ -326,227 +471,396 @@ export default function QuickSellPage() {
               </AccordionTrigger>
               <AccordionContent className="px-4 sm:px-6 pb-4 sm:pb-6">
                 <div className="space-y-4">
-                  {selectedProduct && selectedProduct.quantity <= 0 && (
-                    <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-                      <p className="text-sm font-medium text-destructive">
-                        {t("common.quickSell.noItemsAvailable")}
+                  {/* Category Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("common.table.category")}
+                    </label>
+                    <CategorySelect
+                      value={selectedCategoryId}
+                      onValueChange={(value) => {
+                        form.setValue("selectedCategoryId", value);
+                        setSelectedProducts(new Map()); // Clear selections when category changes
+                      }}
+                      placeholder={t("common.quickSell.selectCategory")}
+                    />
+                  </div>
+
+                  {/* Multi-Product Selection */}
+                  {selectedCategoryId && filteredProducts.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                          {t("common.quickSell.selectMultipleProducts") ||
+                            "Select multiple products to sell at once"}
+                        </p>
+                        {selectedProducts.size > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedProducts(new Map())}
+                            className="text-xs"
+                          >
+                            {t("common.quickSell.clearSelection") ||
+                              "Clear Selection"}
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="border rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto max-h-[400px]">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-12">
+                                  <Checkbox
+                                    checked={
+                                      filteredProducts.length > 0 &&
+                                      filteredProducts.every((p) =>
+                                        selectedProducts.has(p.id)
+                                      ) &&
+                                      filteredProducts.some(
+                                        (p) => p.quantity > 0
+                                      )
+                                    }
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        const newSelected = new Map<
+                                          number,
+                                          SelectedProduct
+                                        >();
+                                        filteredProducts.forEach((product) => {
+                                          if (product.quantity > 0) {
+                                            newSelected.set(product.id, {
+                                              productId: product.id,
+                                              amount: 1,
+                                              soldPrice: product.sellingPrice,
+                                            });
+                                          }
+                                        });
+                                        setSelectedProducts(newSelected);
+                                      } else {
+                                        setSelectedProducts(new Map());
+                                      }
+                                    }}
+                                    disabled={
+                                      !filteredProducts.some(
+                                        (p) => p.quantity > 0
+                                      )
+                                    }
+                                  />
+                                </TableHead>
+                                <TableHead>
+                                  {t("common.quickSell.product")}
+                                </TableHead>
+                                <TableHead className="hidden sm:table-cell">
+                                  {t("common.quickSell.available")}
+                                </TableHead>
+                                <TableHead>
+                                  {t("common.quickSell.amount")}
+                                </TableHead>
+                                <TableHead>
+                                  {t("common.quickSell.pricePerUnit")}
+                                </TableHead>
+                                <TableHead className="hidden md:table-cell">
+                                  {t("common.analytics.totalRevenueLabel")}
+                                </TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {filteredProducts.map((product) => {
+                                const isSelected = selectedProducts.has(
+                                  product.id
+                                );
+                                const selected = selectedProducts.get(
+                                  product.id
+                                );
+                                const isOutOfStock = product.quantity <= 0;
+
+                                return (
+                                  <TableRow
+                                    key={product.id}
+                                    className={cn(isOutOfStock && "opacity-50")}
+                                  >
+                                    <TableCell>
+                                      <Checkbox
+                                        checked={isSelected}
+                                        onCheckedChange={() =>
+                                          toggleProductSelection(product.id)
+                                        }
+                                        disabled={isOutOfStock}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <div>
+                                        <p className="font-medium">
+                                          {product.name}
+                                        </p>
+                                        {isOutOfStock && (
+                                          <p className="text-xs text-red-500">
+                                            {t(
+                                              "common.quickSell.noItemsAvailable"
+                                            )}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="hidden sm:table-cell">
+                                      {product.quantity}
+                                    </TableCell>
+                                    <TableCell>
+                                      {isSelected ? (
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          max={product.quantity}
+                                          value={selected?.amount || 1}
+                                          onChange={(e) => {
+                                            const value =
+                                              parseInt(e.target.value) || 1;
+                                            updateSelectedProduct(
+                                              product.id,
+                                              "amount",
+                                              Math.min(value, product.quantity)
+                                            );
+                                          }}
+                                          className="h-9 w-20"
+                                          disabled={isOutOfStock}
+                                        />
+                                      ) : (
+                                        <span className="text-sm text-muted-foreground">
+                                          -
+                                        </span>
+                                      )}
+                                    </TableCell>
+                                    <TableCell>
+                                      {isSelected ? (
+                                        <Input
+                                          type="number"
+                                          step="0.01"
+                                          min="0.01"
+                                          value={selected?.soldPrice || 0}
+                                          onChange={(e) => {
+                                            const value =
+                                              parseFloat(e.target.value) || 0;
+                                            updateSelectedProduct(
+                                              product.id,
+                                              "soldPrice",
+                                              value
+                                            );
+                                          }}
+                                          className="h-9 w-24"
+                                          disabled={isOutOfStock}
+                                          placeholder={product.sellingPrice.toFixed(
+                                            2
+                                          )}
+                                        />
+                                      ) : (
+                                        <span className="text-sm text-muted-foreground">
+                                          {product.sellingPrice.toFixed(2)} ETB
+                                        </span>
+                                      )}
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell">
+                                      {isSelected && selected ? (
+                                        <span className="font-medium">
+                                          {(
+                                            selected.amount * selected.soldPrice
+                                          ).toFixed(2)}{" "}
+                                          ETB
+                                        </span>
+                                      ) : (
+                                        <span className="text-sm text-muted-foreground">
+                                          -
+                                        </span>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+
+                      {/* Selected Products Summary and Actions */}
+                      {selectedProducts.size > 0 && (
+                        <div className="space-y-3">
+                          <div className="p-3 bg-muted rounded-md border">
+                            <div className="flex justify-between items-center mb-2">
+                              <p className="text-sm font-medium">
+                                {t("common.quickSell.selectedProducts") ||
+                                  "Selected Products"}{" "}
+                                ({selectedProducts.size})
+                              </p>
+                              <p className="text-sm font-semibold text-primary">
+                                {Array.from(selectedProducts.values())
+                                  .reduce((sum, selected) => {
+                                    return (
+                                      sum + selected.amount * selected.soldPrice
+                                    );
+                                  }, 0)
+                                  .toFixed(2)}{" "}
+                                ETB
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="default"
+                              onClick={addSelectedToCart}
+                              className="flex-1"
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              {t("common.quickSell.addSelectedToCart") ||
+                                "Add Selected to Cart"}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={sellSelectedProducts}
+                              disabled={bulkSell.isPending}
+                              className="flex-1"
+                            >
+                              {bulkSell.isPending && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              )}
+                              {t("common.quickSell.sellSelected") ||
+                                "Sell Selected"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : selectedCategoryId && filteredProducts.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p className="text-sm">
+                        {t("common.quickSell.noProductsAvailable")}
                       </p>
-                      <p className="text-xs text-destructive/80 mt-1">
-                        {t("common.sellProduct.outOfStock")}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p className="text-sm">
+                        {t("common.quickSell.selectCategoryFirst") ||
+                          "Please select a category to view products"}
                       </p>
                     </div>
                   )}
-                  <Form {...form}>
-                    <form
-                      // @ts-expect-error - Type inference issue with complex zod schema
-                      onSubmit={form.handleSubmit(onSubmit)}
-                      className="space-y-4"
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FormField
-                          // @ts-expect-error - Type inference issue with complex zod schema
-                          control={form.control}
-                          name="selectedCategoryId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-medium">
-                                {t("common.table.category")}
-                              </FormLabel>
-                              <FormControl>
-                                <CategorySelect
-                                  value={field.value ?? null}
-                                  onValueChange={(value) => {
-                                    field.onChange(value);
-                                    form.setValue("selectedProductId", 0); // Reset product when category changes
-                                  }}
-                                  placeholder={t(
-                                    "common.quickSell.selectCategory"
-                                  )}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
 
-                        <FormField
-                          // @ts-expect-error - Type inference issue with complex zod schema
-                          control={form.control}
-                          name="selectedProductId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-medium">
-                                {t("common.quickSell.product")}
-                              </FormLabel>
-                              <FormControl>
-                                <Select
-                                  value={field.value?.toString() ?? ""}
-                                  onValueChange={(value) => {
-                                    field.onChange(parseInt(value));
-                                  }}
-                                  disabled={
-                                    !selectedCategoryId ||
-                                    filteredProducts.length === 0
-                                  }
-                                >
-                                  <SelectTrigger className="h-11 sm:h-10 text-base sm:text-sm">
-                                    <SelectValue
-                                      placeholder={t(
-                                        "common.quickSell.selectProduct"
-                                      )}
-                                    />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {productsLoading ? (
-                                      <SelectItem value="loading" disabled>
-                                        {t("common.quickSell.loading")}
-                                      </SelectItem>
-                                    ) : filteredProducts.length === 0 ? (
-                                      <SelectItem value="none" disabled>
-                                        {t(
-                                          "common.quickSell.noProductsAvailable"
-                                        )}
-                                      </SelectItem>
-                                    ) : (
-                                      filteredProducts.map((product) => (
-                                        <SelectItem
-                                          key={product.id}
-                                          value={product.id.toString()}
-                                        >
-                                          {product.name} (
-                                          {t("common.quickSell.available")}:{" "}
-                                          {product.quantity})
-                                        </SelectItem>
-                                      ))
-                                    )}
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                  {/* Cart Section - Always visible */}
+                  <div className="mt-6 border rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <ShoppingCart className="h-5 w-5" />
+                        {t("common.quickSell.cart") || "Cart"}
+                        {cart.length > 0 && ` (${cart.length})`}
+                      </h3>
+                      {cart.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={clearCart}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          {t("common.quickSell.clearCart") || "Clear Cart"}
+                        </Button>
+                      )}
+                    </div>
+
+                    {cart.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground border border-dashed rounded-md">
+                        <ShoppingCart className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p className="text-sm font-medium mb-1">
+                          {t("common.quickSell.emptyCart") ||
+                            "Your cart is empty"}
+                        </p>
+                        <p className="text-xs">
+                          {t("common.quickSell.addProductsHint") ||
+                            "Select products above and click 'Add to Cart' to build your transaction"}
+                        </p>
                       </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FormField
-                          // @ts-expect-error - Type inference issue with complex zod schema and dynamic translations
-                          control={form.control}
-                          name="amount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-medium">
-                                {t("common.quickSell.amount")}
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  type="number"
-                                  min="1"
-                                  max={selectedProduct?.quantity ?? 0}
-                                  onChange={(e) =>
-                                    field.onChange(e.target.value)
-                                  }
-                                  value={field.value || ""}
-                                  className="h-11 sm:h-10 text-base sm:text-sm"
-                                  placeholder={t(
-                                    "common.quickSell.enterAmount"
-                                  )}
-                                  disabled={
-                                    !selectedProduct ||
-                                    (selectedProduct?.quantity ?? 0) <= 0
-                                  }
-                                />
-                              </FormControl>
-                              {selectedProduct && (
-                                <p className="text-xs text-muted-foreground">
-                                  {t("common.quickSell.available")}:{" "}
-                                  {selectedProduct.quantity}
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          {cart.map((item) => (
+                            <div
+                              key={item.productId}
+                              className="flex items-center justify-between p-3 bg-muted rounded-md"
+                            >
+                              <div className="flex-1">
+                                <p className="font-medium">
+                                  {item.product.name}
                                 </p>
-                              )}
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          // @ts-expect-error - Type inference issue with complex zod schema
-                          control={form.control}
-                          name="soldPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-medium">
-                                {t("common.quickSell.pricePerUnit")}
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  type="number"
-                                  step="0.01"
-                                  min="0.01"
-                                  onChange={(e) =>
-                                    field.onChange(e.target.value)
-                                  }
-                                  value={field.value || ""}
-                                  className="h-11 sm:h-10 text-base sm:text-sm"
-                                  placeholder={t("common.quickSell.enterPrice")}
-                                  disabled={
-                                    !selectedProduct ||
-                                    (selectedProduct?.quantity ?? 0) <= 0
-                                  }
-                                />
-                              </FormControl>
-                              {selectedProduct && (
-                                <p className="text-xs text-muted-foreground">
-                                  {t("common.quickSell.default")}:{" "}
-                                  {selectedProduct.sellingPrice.toFixed(2)} ETB
+                                <p className="text-sm text-muted-foreground">
+                                  {item.amount} × {item.soldPrice.toFixed(2)}{" "}
+                                  ETB ={" "}
+                                  {(item.amount * item.soldPrice).toFixed(2)}{" "}
+                                  ETB
                                 </p>
-                              )}
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {(() => {
-                        const amount = Number(form.watch("amount"));
-                        const soldPrice = Number(form.watch("soldPrice"));
-                        if (
-                          amount > 0 &&
-                          soldPrice > 0 &&
-                          !isNaN(amount) &&
-                          !isNaN(soldPrice)
-                        ) {
-                          return (
-                            <div className="p-3 bg-muted rounded-md border">
-                              <p className="text-xs sm:text-sm text-muted-foreground">
-                                {t("common.analytics.totalRevenueLabel")}
-                              </p>
-                              <p className="text-base sm:text-lg font-semibold text-primary">
-                                {(amount * soldPrice).toFixed(2)} ETB
-                              </p>
+                                {item.product.category && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {item.product.category.name}
+                                  </p>
+                                )}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeFromCart(item.productId)}
+                                className="ml-2 text-destructive hover:text-destructive"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
-                          );
-                        }
-                        return null;
-                      })()}
+                          ))}
+                        </div>
 
-                      <Button
-                        type="submit"
-                        disabled={
-                          sellProduct.isPending ||
-                          !selectedProduct ||
-                          (selectedProduct?.quantity ?? 0) <= 0
-                        }
-                        className="w-full sm:w-auto"
-                      >
-                        {sellProduct.isPending && (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        )}
-                        {t("common.quickSell.sellProduct")}
-                      </Button>
-                    </form>
-                  </Form>
+                        <div className="pt-4 border-t space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              {t("common.quickSell.totalItems") ||
+                                "Total Items"}
+                              :
+                            </span>
+                            <span className="font-medium">
+                              {cartTotals.totalQuantity}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              {t("common.analytics.totalRevenueLabel")}:
+                            </span>
+                            <span className="font-semibold text-primary">
+                              {cartTotals.totalRevenue.toFixed(2)} ETB
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">
+                              {t("common.analytics.totalProfit")}:
+                            </span>
+                            <span className="font-semibold text-green-400">
+                              {cartTotals.totalProfit.toFixed(2)} ETB
+                            </span>
+                          </div>
+                          <Button
+                            onClick={handleSubmitCart}
+                            disabled={bulkSell.isPending || cart.length === 0}
+                            className="w-full mt-4"
+                            size="lg"
+                          >
+                            {bulkSell.isPending && (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            {t("common.quickSell.completeTransaction") ||
+                              "Complete Transaction"}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </AccordionContent>
             </div>
@@ -805,9 +1119,10 @@ export default function QuickSellPage() {
                             dayStats.transactions += 1;
                             dayStats.quantity += item.amount;
                             dayStats.revenue += item.totalPrice;
+                            const initialPrice =
+                              item.initialPrice || item.product.initialPrice;
                             dayStats.profit +=
-                              item.totalPrice -
-                              item.product.initialPrice * item.amount;
+                              item.totalPrice - initialPrice * item.amount;
                           });
 
                           return Array.from(groupedByDate.values())

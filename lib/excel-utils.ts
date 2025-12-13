@@ -58,7 +58,8 @@ export function exportToExcel(
             "Price per Unit (ETB)": history.soldPrice,
             "Total Revenue (ETB)": history.totalPrice,
             "Profit (ETB)":
-              history.totalPrice - product.initialPrice * history.amount,
+              history.totalPrice -
+              (history.initialPrice || product.initialPrice) * history.amount,
           });
         });
       }
@@ -105,7 +106,8 @@ export function exportToExcel(
       if (product.sellHistory && product.sellHistory.length > 0) {
         product.sellHistory.forEach((history) => {
           const sellDate = new Date(history.createdAt);
-          const initialCost = product.initialPrice * history.amount;
+          const initialCost =
+            (history.initialPrice || product.initialPrice) * history.amount;
           const saleProfit = history.totalPrice - initialCost;
 
           const sellDateOnly = new Date(
@@ -272,7 +274,9 @@ export function exportSellHistoryToExcel(
 
   const sellHistoryData = sellHistory.map((history) => {
     const product = productMap.get(history.productId);
-    const initialCost = product ? product.initialPrice * history.amount : 0;
+    const initialPrice =
+      history.initialPrice || (product ? product.initialPrice : 0);
+    const initialCost = initialPrice * history.amount;
     const profit = history.totalPrice - initialCost;
 
     return {
@@ -361,7 +365,8 @@ export function exportAnalyticsToExcel(products: Product[]) {
     if (product.sellHistory && product.sellHistory.length > 0) {
       product.sellHistory.forEach((history) => {
         const sellDate = new Date(history.createdAt);
-        const initialCost = product.initialPrice * history.amount;
+        const initialPrice = history.initialPrice || product.initialPrice;
+        const initialCost = initialPrice * history.amount;
         const saleProfit = history.totalPrice - initialCost;
 
         const sellDateOnly = new Date(
@@ -502,7 +507,9 @@ export function exportDailySellsToExcel(
 
   const dailySalesData = todaySales.map((history) => {
     const product = history.product || productMap.get(history.productId);
-    const initialCost = product ? product.initialPrice * history.amount : 0;
+    const initialPrice =
+      history.initialPrice || (product ? product.initialPrice : 0);
+    const initialCost = initialPrice * history.amount;
     const profit = history.totalPrice - initialCost;
 
     return {
@@ -674,7 +681,8 @@ export function generateSalesReport(products: Product[]) {
       saleDate.getMonth(),
       saleDate.getDate()
     );
-    const initialCost = history.product.initialPrice * history.amount;
+    const initialPrice = history.initialPrice || history.product.initialPrice;
+    const initialCost = initialPrice * history.amount;
     const profit = history.totalPrice - initialCost;
 
     // Daily stats
@@ -863,7 +871,8 @@ export function generateSalesReport(products: Product[]) {
         });
       }
       const dayStats = dailySalesMap.get(dateKey)!;
-      const initialCost = history.product.initialPrice * history.amount;
+      const initialPrice = history.initialPrice || history.product.initialPrice;
+      const initialCost = initialPrice * history.amount;
       dayStats.revenue += history.totalPrice;
       dayStats.quantity += history.amount;
       dayStats.profit += history.totalPrice - initialCost;

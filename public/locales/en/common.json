@@ -109,7 +109,22 @@
       "thisPeriod": "this period",
       "total": "Total",
       "exportError": "Failed to export daily sales. Please try again.",
-      "reportError": "Failed to generate sales report. Please try again."
+      "reportError": "Failed to generate sales report. Please try again.",
+      "addToCart": "Add to Cart",
+      "sellNow": "Sell Now",
+      "cart": "Cart",
+      "emptyCart": "Your cart is empty",
+      "addProductsHint": "Select products above and click 'Add to Cart' to build your transaction",
+      "clearCart": "Clear Cart",
+      "totalItems": "Total Items",
+      "completeTransaction": "Complete Transaction",
+      "cartHasItems": "{{count}} item(s) in cart. Add more products or complete the transaction.",
+      "selectMultipleProducts": "Select multiple products to sell at once",
+      "clearSelection": "Clear Selection",
+      "selectedProducts": "Selected Products",
+      "addSelectedToCart": "Add Selected to Cart",
+      "sellSelected": "Sell Selected",
+      "selectCategoryFirst": "Please select a category to view products"
     },
     "import": {
       "importExcel": "Import Excel",
