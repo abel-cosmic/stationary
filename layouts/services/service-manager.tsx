@@ -46,27 +46,21 @@ import type { Service } from "@/types/api";
 
 const createServiceSchema = (t: (key: string) => string) =>
   z.object({
-    name: z
-      .string()
-      .min(1, t("common.service.nameRequired") || "Name is required")
-      .trim(),
+    name: z.string().min(1, t("common.service.nameRequired")).trim(),
     defaultPrice: z.coerce
       .number()
-      .positive(t("common.service.priceRequired") || "Price must be positive")
-      .min(0.01, t("common.service.priceMin") || "Price must be at least 0.01"),
+      .positive(t("common.service.priceRequired"))
+      .min(0.01, t("common.service.priceMin")),
     description: z.string().optional().nullable(),
   });
 
 const updateServiceSchema = (t: (key: string) => string) =>
   z.object({
-    name: z
-      .string()
-      .min(1, t("common.service.nameRequired") || "Name is required")
-      .trim(),
+    name: z.string().min(1, t("common.service.nameRequired")).trim(),
     defaultPrice: z.coerce
       .number()
-      .positive(t("common.service.priceRequired") || "Price must be positive")
-      .min(0.01, t("common.service.priceMin") || "Price must be at least 0.01"),
+      .positive(t("common.service.priceRequired"))
+      .min(0.01, t("common.service.priceMin")),
     description: z.string().optional().nullable(),
   });
 
@@ -144,12 +138,7 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
   };
 
   const handleDelete = async (id: number) => {
-    if (
-      confirm(
-        t("common.service.confirmDelete") ||
-          "Are you sure you want to delete this service?"
-      )
-    ) {
+    if (confirm(t("common.service.confirmDelete"))) {
       try {
         await deleteService.mutateAsync(id);
       } catch (error) {
@@ -167,7 +156,7 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
         {trigger || (
           <Button variant="outline">
             <Wrench className="mr-2 h-4 w-4" />
-            {t("common.service.manage") || "Manage Services"}
+            {t("common.service.manage")}
           </Button>
         )}
       </DialogTrigger>
@@ -175,14 +164,13 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">
             {editingService
-              ? t("common.service.edit") || "Edit Service"
-              : t("common.service.create") || "Create Service"}
+              ? t("common.service.edit")
+              : t("common.service.create")}
           </DialogTitle>
           <DialogDescription className="text-sm">
             {editingService
-              ? t("common.service.editDescription") || "Update service details"
-              : t("common.service.createDescription") ||
-                "Add a new service to track"}
+              ? t("common.service.editDescription")
+              : t("common.service.createDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -196,15 +184,12 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium">
-                        {t("common.service.name") || "Service Name"}
+                        {t("common.service.name")}
                       </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder={
-                            t("common.service.namePlaceholder") ||
-                            "e.g., Printing, Typing"
-                          }
+                          placeholder={t("common.service.namePlaceholder")}
                           className="h-11 sm:h-10 text-base sm:text-sm"
                           autoFocus
                         />
@@ -220,7 +205,7 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium">
-                        {t("common.service.defaultPrice") || "Default Price"}
+                        {t("common.service.defaultPrice")}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -243,19 +228,18 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium">
-                        {t("common.service.description") || "Description"}
+                        {t("common.service.description")}
                         <span className="text-muted-foreground ml-1">
-                          ({t("common.optional") || "Optional"})
+                          ({t("common.optional")})
                         </span>
                       </FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
                           value={field.value || ""}
-                          placeholder={
-                            t("common.service.descriptionPlaceholder") ||
-                            "Add a description for this service"
-                          }
+                          placeholder={t(
+                            "common.service.descriptionPlaceholder"
+                          )}
                           className="min-h-[80px] text-base sm:text-sm"
                         />
                       </FormControl>
@@ -293,8 +277,8 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
                     {editingService
-                      ? t("common.buttons.update") || "Update"
-                      : t("common.buttons.create") || "Create"}
+                      ? t("common.buttons.update")
+                      : t("common.buttons.create")}
                   </Button>
                 </DialogFooter>
               </div>
@@ -305,7 +289,7 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
           <div className="border-t pt-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold">
-                {t("common.service.list") || "Services"}
+                {t("common.service.list")}
               </h3>
               <Button
                 type="button"
@@ -321,7 +305,7 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {t("common.service.addNew") || "Add New"}
+                {t("common.service.addNew")}
               </Button>
             </div>
 
@@ -332,10 +316,7 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
             ) : !services || services.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Wrench className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">
-                  {t("common.service.noServices") ||
-                    "No services yet. Create your first service above."}
-                </p>
+                <p className="text-sm">{t("common.service.noServices")}</p>
               </div>
             ) : (
               <div className="border rounded-lg overflow-hidden">
@@ -343,20 +324,16 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>
-                          {t("common.service.name") || "Name"}
-                        </TableHead>
-                        <TableHead>
-                          {t("common.service.defaultPrice") || "Price"}
-                        </TableHead>
+                        <TableHead>{t("common.table.name")}</TableHead>
+                        <TableHead>{t("common.table.price")}</TableHead>
                         <TableHead className="hidden sm:table-cell">
-                          {t("common.service.revenue") || "Revenue"}
+                          {t("common.service.revenue")}
                         </TableHead>
                         <TableHead className="hidden md:table-cell">
-                          {t("common.service.totalSold") || "Total Sold"}
+                          {t("common.service.totalSold")}
                         </TableHead>
                         <TableHead className="text-right">
-                          {t("common.actions") || "Actions"}
+                          {t("common.actions")}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
@@ -367,10 +344,12 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
                             {service.name}
                           </TableCell>
                           <TableCell>
-                            {service.defaultPrice.toFixed(2)} ETB
+                            {service.defaultPrice.toFixed(2)}{" "}
+                            {t("common.excel.units.etb")}
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
-                            {service.revenue.toFixed(2)} ETB
+                            {service.revenue.toFixed(2)}{" "}
+                            {t("common.excel.units.etb")}
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
                             {service.totalSold}

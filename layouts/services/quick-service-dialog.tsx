@@ -38,33 +38,17 @@ const sellServiceSchema = (t: (key: string) => string) =>
   z.object({
     serviceId: z.coerce
       .number()
-      .int(t("common.service.mustSelect") || "Service must be selected")
-      .positive(t("common.service.mustSelect") || "Service must be selected"),
+      .int(t("common.service.mustSelect"))
+      .positive(t("common.service.mustSelect")),
     amount: z.coerce
       .number()
-      .int(
-        t("common.validation.amountMustBeInteger") ||
-          "Amount must be an integer"
-      )
-      .positive(
-        t("common.validation.amountMustBePositive") || "Amount must be positive"
-      )
-      .min(
-        1,
-        t("common.validation.amountMustBeAtLeast1") ||
-          "Amount must be at least 1"
-      ),
+      .int(t("common.validation.amountMustBeInteger"))
+      .positive(t("common.validation.amountMustBePositive"))
+      .min(1, t("common.validation.amountMustBeAtLeast1")),
     soldPrice: z.coerce
       .number()
-      .positive(
-        t("common.validation.sellingPriceMustBePositive") ||
-          "Selling price must be positive"
-      )
-      .min(
-        0.01,
-        t("common.validation.sellingPriceMustBeAtLeast001") ||
-          "Selling price must be at least 0.01"
-      ),
+      .positive(t("common.validation.sellingPriceMustBePositive"))
+      .min(0.01, t("common.validation.sellingPriceMustBeAtLeast001")),
   });
 
 type SellServiceFormValues = {
@@ -157,18 +141,17 @@ export function QuickServiceDialog({ trigger }: QuickServiceDialogProps) {
         {trigger || (
           <Button>
             <Wrench className="mr-2 h-4 w-4" />
-            {t("common.service.quickSell") || "Quick Service"}
+            {t("common.service.quickSell")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">
-            {t("common.service.quickSell") || "Quick Service"}
+            {t("common.service.quickSell")}
           </DialogTitle>
           <DialogDescription className="text-sm">
-            {t("common.service.quickSellDescription") ||
-              "Record a service sale quickly"}
+            {t("common.service.quickSellDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -185,7 +168,7 @@ export function QuickServiceDialog({ trigger }: QuickServiceDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium">
-                      {t("common.service.service") || "Service"}
+                      {t("common.service.service")}
                     </FormLabel>
                     <FormControl>
                       <Select
@@ -199,21 +182,17 @@ export function QuickServiceDialog({ trigger }: QuickServiceDialogProps) {
                       >
                         <SelectTrigger className="h-11 sm:h-10 text-base sm:text-sm">
                           <SelectValue
-                            placeholder={
-                              t("common.service.selectService") ||
-                              "Select a service"
-                            }
+                            placeholder={t("common.service.selectService")}
                           />
                         </SelectTrigger>
                         <SelectContent>
                           {servicesLoading ? (
                             <SelectItem value="loading" disabled>
-                              {t("common.loading") || "Loading..."}
+                              {t("common.loading")}
                             </SelectItem>
                           ) : !services || services.length === 0 ? (
                             <SelectItem value="none" disabled>
-                              {t("common.service.noServicesAvailable") ||
-                                "No services available"}
+                              {t("common.service.noServicesAvailable")}
                             </SelectItem>
                           ) : (
                             services.map((service) => (
@@ -222,7 +201,8 @@ export function QuickServiceDialog({ trigger }: QuickServiceDialogProps) {
                                 value={service.id.toString()}
                               >
                                 {service.name} (
-                                {service.defaultPrice.toFixed(2)} ETB)
+                                {service.defaultPrice.toFixed(2)}{" "}
+                                {t("common.excel.units.etb")})
                               </SelectItem>
                             ))
                           )}
@@ -241,7 +221,7 @@ export function QuickServiceDialog({ trigger }: QuickServiceDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium">
-                      {t("common.service.amount") || "Amount"}
+                      {t("common.service.amount")}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -251,9 +231,7 @@ export function QuickServiceDialog({ trigger }: QuickServiceDialogProps) {
                         onChange={(e) => field.onChange(e.target.value)}
                         value={field.value || ""}
                         className="h-11 sm:h-10 text-base sm:text-sm"
-                        placeholder={
-                          t("common.service.enterAmount") || "Enter amount"
-                        }
+                        placeholder={t("common.service.enterAmount")}
                       />
                     </FormControl>
                     <FormMessage />
@@ -268,7 +246,7 @@ export function QuickServiceDialog({ trigger }: QuickServiceDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium">
-                      {t("common.service.pricePerUnit") || "Price per Unit"}
+                      {t("common.service.pricePerUnit")}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -288,8 +266,9 @@ export function QuickServiceDialog({ trigger }: QuickServiceDialogProps) {
                     </FormControl>
                     {selectedService && (
                       <p className="text-xs text-muted-foreground">
-                        {t("common.service.default") || "Default"}:{" "}
-                        {selectedService.defaultPrice.toFixed(2)} ETB
+                        {t("common.quickSell.default")}:{" "}
+                        {selectedService.defaultPrice.toFixed(2)}{" "}
+                        {t("common.excel.units.etb")}
                       </p>
                     )}
                     <FormMessage />
@@ -300,10 +279,10 @@ export function QuickServiceDialog({ trigger }: QuickServiceDialogProps) {
               {totalPrice > 0 && (
                 <div className="p-3 bg-muted rounded-md border">
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    {t("common.analytics.totalRevenueLabel") || "Total Revenue"}
+                    {t("common.analytics.totalRevenueLabel")}
                   </p>
                   <p className="text-base sm:text-lg font-semibold text-primary">
-                    {totalPrice.toFixed(2)} ETB
+                    {totalPrice.toFixed(2)} {t("common.excel.units.etb")}
                   </p>
                 </div>
               )}
@@ -333,7 +312,7 @@ export function QuickServiceDialog({ trigger }: QuickServiceDialogProps) {
                 {sellService.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {t("common.service.sell") || "Sell Service"}
+                {t("common.service.sell")}
               </Button>
             </DialogFooter>
           </form>

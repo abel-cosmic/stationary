@@ -349,7 +349,8 @@
       "sell": "አገልግሎት ይሽጡ",
       "mustSelect": "አገልግሎት መመረጥ አለበት",
       "revenue": "ገቢ",
-      "totalSold": "ጠቅላላ የተሸጠ"
+      "totalSold": "ጠቅላላ የተሸጠ",
+      "default": "ነባሪ"
     },
     "optional": "አማራጭ",
     "loading": "በመጫን ላይ...",

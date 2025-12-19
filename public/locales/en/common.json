@@ -341,7 +341,8 @@
       "sell": "Sell Service",
       "mustSelect": "Service must be selected",
       "revenue": "Revenue",
-      "totalSold": "Total Sold"
+      "totalSold": "Total Sold",
+      "default": "Default"
     },
     "optional": "Optional",
     "loading": "Loading...",
