@@ -1,15 +1,13 @@
 "use client";
 
-import { use, useState, useMemo } from "react";
+import { use, useMemo } from "react";
+import { useSearch } from "@/lib/hooks/use-search";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { useProducts } from "@/lib/hooks/use-products";
-import { ProductCard } from "@/layouts/categories/product-card";
 import { ProductTable } from "@/layouts/categories/product-table";
 import { SearchBar } from "@/layouts/categories/search-bar";
 import { CreateProductDialog } from "@/layouts/categories/create-product-dialog";
 import { ExportDialog } from "@/layouts/categories/export-dialog";
-import { ViewSwitcher } from "@/layouts/categories/view-switcher";
-import type { ViewMode } from "@/types/common";
 import { CategoryAnalytics } from "@/layouts/categories/category-analytics";
 import { ThemeToggle } from "@/layouts/common/theme-toggle";
 import { LanguageToggle } from "@/layouts/common/language-toggle";
@@ -30,8 +28,6 @@ export default function CategoryProductsPage({
   const router = useRouter();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { data: products, isLoading: productsLoading, error } = useProducts();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("card");
 
   const category = categories?.find((cat) => cat.id === categoryId);
   const isLoading = categoriesLoading || productsLoading;
@@ -41,18 +37,13 @@ export default function CategoryProductsPage({
     return products.filter((product) => product.categoryId === categoryId);
   }, [products, categoryId]);
 
-  const filteredProducts = useMemo(() => {
-    if (!categoryProducts) return [];
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      return categoryProducts.filter((product) =>
-        product.name.toLowerCase().includes(query)
-      );
-    }
-
-    return categoryProducts;
-  }, [categoryProducts, searchQuery]);
+  const {
+    query: searchQuery,
+    setQuery: setSearchQuery,
+    filteredItems: filteredProducts,
+  } = useSearch(`category-${categoryId}`, categoryProducts, (product, query) =>
+    product.name.toLowerCase().includes(query.toLowerCase())
+  );
 
   if (isLoading) {
     return (
@@ -129,13 +120,8 @@ export default function CategoryProductsPage({
           <CategoryAnalytics products={categoryProducts} />
         </div>
 
-        <div className="mb-3 sm:mb-4 lg:mb-6 flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 items-stretch sm:items-center">
-          <div className="flex-1 min-w-0">
-            <SearchBar onSearch={setSearchQuery} />
-          </div>
-          <div className="shrink-0">
-            <ViewSwitcher view={viewMode} onViewChange={setViewMode} />
-          </div>
+        <div className="mb-3 sm:mb-4 lg:mb-6">
+          <SearchBar onSearch={setSearchQuery} />
         </div>
 
         {filteredProducts.length === 0 ? (
@@ -145,12 +131,6 @@ export default function CategoryProductsPage({
                 ? t("common.search.noResults")
                 : t("common.category.noProductsInCategory")}
             </p>
-          </div>
-        ) : viewMode === "card" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
           </div>
         ) : (
           <div className="overflow-x-auto -mx-3 sm:mx-0">

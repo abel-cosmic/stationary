@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCategories } from "@/lib/hooks/use-categories";
 import { useProducts } from "@/lib/hooks/use-products";
-import { CategoryCard } from "@/layouts/home/category-card";
+import { useServices } from "@/lib/hooks/use-services";
 import { CategoryTable } from "@/layouts/home/category-table";
 import { CategoryManager } from "@/layouts/home/category-manager";
 import { CategoryExportButton } from "@/layouts/home/category-export-button";
@@ -12,15 +11,26 @@ import { ImportButton } from "@/layouts/home/import-button";
 import { OverviewAnalytics } from "@/layouts/home/overview-analytics";
 import { ThemeToggle } from "@/layouts/common/theme-toggle";
 import { LanguageToggle } from "@/layouts/common/language-toggle";
-import { ViewSwitcher } from "@/layouts/home/view-switcher";
-import type { ViewMode } from "@/types/common";
-import { Loader2, FolderTree, Plus, ShoppingCart } from "lucide-react";
+import { QuickServiceDialog } from "@/layouts/services/quick-service-dialog";
+import { ServiceManager } from "@/layouts/services/service-manager";
+import {
+  Loader2,
+  FolderTree,
+  Plus,
+  ShoppingCart,
+  Wrench,
+  Settings,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import Link from "next/link";
 
 export default function Home() {
   const { t } = useTranslation();
-  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const {
     data: categories,
     isLoading: categoriesLoading,
@@ -31,9 +41,14 @@ export default function Home() {
     isLoading: productsLoading,
     error: productsError,
   } = useProducts();
+  const {
+    data: services,
+    isLoading: servicesLoading,
+    error: servicesError,
+  } = useServices();
 
-  const isLoading = categoriesLoading || productsLoading;
-  const error = categoriesError || productsError;
+  const isLoading = categoriesLoading || productsLoading || servicesLoading;
+  const error = categoriesError || productsError || servicesError;
 
   if (isLoading) {
     return (
@@ -63,62 +78,71 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
-        <div className="mb-4 sm:mb-6 lg:mb-8 flex flex-col gap-3 sm:gap-4">
+        <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1 sm:mb-2">
+              <div className="flex items-center gap-2">
                 <FolderTree className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8" />
                 <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold">
                   {t("common.categories")}
                 </h1>
               </div>
-              <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">
-                {t("common.selectCategory")}
-              </p>
             </div>
             <div className="shrink-0 flex items-center gap-2">
               <LanguageToggle />
               <ThemeToggle />
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
+
+          {/* Primary Actions */}
+          <div className="flex flex-wrap gap-2">
             <Link href="/quick-sell">
               <Button>
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 {t("common.quickSell.title")}
               </Button>
             </Link>
-            <CategoryManager />
-            {categories && categories.length > 0 && (
-              <>
-                <CategoryExportButton categories={categories} />
-                <ImportButton />
-              </>
-            )}
+            <QuickServiceDialog />
           </div>
+
+          {/* Secondary Actions - Collapsed */}
+          <Accordion defaultOpen={false} className="w-full">
+            <div className="border rounded-lg">
+              <AccordionTrigger className="px-4 py-2">
+                <div className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    {t("common.managementTools") || "Management Tools"}
+                  </span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="flex flex-wrap gap-2">
+                  <CategoryManager />
+                  <ServiceManager />
+                  {categories && categories.length > 0 && (
+                    <>
+                      <CategoryExportButton categories={categories} />
+                      <ImportButton />
+                    </>
+                  )}
+                </div>
+              </AccordionContent>
+            </div>
+          </Accordion>
+
+          {/* Analytics - Collapsed */}
+          {categories && products && (
+            <OverviewAnalytics
+              categories={categories}
+              products={products}
+              services={services}
+            />
+          )}
         </div>
 
-        {categories && products && (
-          <div className="mb-4 sm:mb-6">
-            <OverviewAnalytics categories={categories} products={products} />
-          </div>
-        )}
-
         {categories && categories.length > 0 ? (
-          <>
-            <div className="mb-3 sm:mb-4 lg:mb-6 flex justify-end">
-              <ViewSwitcher view={viewMode} onViewChange={setViewMode} />
-            </div>
-            {viewMode === "card" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-                {categories.map((category) => (
-                  <CategoryCard key={category.id} category={category} />
-                ))}
-              </div>
-            ) : (
-              <CategoryTable categories={categories} />
-            )}
-          </>
+          <CategoryTable categories={categories} />
         ) : (
           <div className="text-center py-12">
             <FolderTree className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />

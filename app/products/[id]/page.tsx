@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use } from "react";
 import { useProduct } from "@/lib/hooks/use-products";
 import { ProductSummaryCard } from "@/layouts/products/product-summary-card";
 import { ProductAnalytics } from "@/layouts/products/product-analytics";
@@ -8,9 +8,6 @@ import { SellProductDialog } from "@/layouts/products/sell-product-dialog";
 import { EditProductDialog } from "@/layouts/products/edit-product-dialog";
 import { DeleteButton } from "@/layouts/products/delete-button";
 import { SellHistoryTable } from "@/layouts/products/sell-history-table";
-import { SellHistoryCards } from "@/layouts/products/sell-history-cards";
-import { ViewSwitcher } from "@/layouts/products/view-switcher";
-import type { ViewMode } from "@/types/common";
 import { ThemeToggle } from "@/layouts/common/theme-toggle";
 import { LanguageToggle } from "@/layouts/common/language-toggle";
 import {
@@ -41,7 +38,6 @@ export default function ProductDetailsPage({
   const productId = parseInt(id);
   const router = useRouter();
   const { data: product, isLoading, error } = useProduct(productId);
-  const [historyViewMode, setHistoryViewMode] = useState<ViewMode>("table");
 
   if (isLoading) {
     return (
@@ -153,22 +149,10 @@ export default function ProductDetailsPage({
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                    <ViewSwitcher
-                      view={historyViewMode}
-                      onViewChange={setHistoryViewMode}
-                    />
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <div className="inline-block min-w-full px-4 sm:px-0">
+                    <SellHistoryTable history={product.sellHistory || []} />
                   </div>
-                  {historyViewMode === "table" ? (
-                    <div className="overflow-x-auto -mx-4 sm:mx-0">
-                      <div className="inline-block min-w-full px-4 sm:px-0">
-                        <SellHistoryTable history={product.sellHistory || []} />
-                      </div>
-                    </div>
-                  ) : (
-                    <SellHistoryCards history={product.sellHistory || []} />
-                  )}
                 </div>
               </AccordionContent>
             </div>

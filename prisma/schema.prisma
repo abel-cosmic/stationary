@@ -41,14 +41,28 @@ model Transaction {
   createdAt    DateTime      @default(now())
 }
 
+model Service {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  defaultPrice Float
+  description  String?
+  totalSold    Int           @default(0)
+  revenue      Float         @default(0)
+  sellHistory  SellHistory[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
 model SellHistory {
   id            Int          @id @default(autoincrement())
-  productId     Int
-  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId     Int?
+  product       Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  serviceId     Int?
+  service       Service?     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   amount        Int
   soldPrice     Float
   totalPrice    Float
-  initialPrice  Float // Store price at time of sale
+  initialPrice  Float? // Store price at time of sale (null for services)
   transactionId Int?
   transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
   createdAt     DateTime     @default(now())

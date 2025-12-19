@@ -28,16 +28,33 @@ export interface Product {
   };
 }
 
+export interface Service {
+  id: number;
+  name: string;
+  defaultPrice: number;
+  description?: string | null;
+  totalSold: number;
+  revenue: number;
+  createdAt: string;
+  updatedAt: string;
+  sellHistory?: SellHistory[];
+  _count?: {
+    sellHistory: number;
+  };
+}
+
 export interface SellHistory {
   id: number;
-  productId: number;
+  productId?: number | null;
+  serviceId?: number | null;
   amount: number;
   soldPrice: number;
   totalPrice: number;
-  initialPrice: number; // Price at time of sale
+  initialPrice?: number | null; // Price at time of sale (null for services)
   transactionId?: number | null;
   createdAt: string;
   product?: Product; // Included when fetched with relations
+  service?: Service; // Included when fetched with relations
 }
 
 export interface CreateProductData {
@@ -85,4 +102,21 @@ export interface CreateCategoryData {
 
 export interface UpdateCategoryData {
   name: string;
+}
+
+export interface CreateServiceData {
+  name: string;
+  defaultPrice: number;
+  description?: string | null;
+}
+
+export interface UpdateServiceData {
+  name?: string;
+  defaultPrice?: number;
+  description?: string | null;
+}
+
+export interface SellServiceData {
+  amount: number;
+  soldPrice: number;
 }

@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { usePagination } from "@/lib/hooks/use-pagination";
+import { useDialog } from "@/lib/hooks/use-dialog";
+import { useEditingStore } from "@/lib/stores";
 import {
   Table,
   TableBody,
@@ -19,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Pagination } from "@/components/ui/pagination";
 import type { Category } from "@/types/api";
 import { useRouter } from "next/navigation";
 import {
@@ -44,29 +48,48 @@ interface CategoryTableProps {
 export function CategoryTable({ categories }: CategoryTableProps) {
   const { t } = useTranslation();
   const router = useRouter();
+  const {
+    currentPage,
+    itemsPerPage,
+    paginatedItems: paginatedCategories,
+    totalItems,
+    setPage,
+    setItemsPerPage,
+  } = usePagination("category-table", categories);
 
   return (
-    <div className="rounded-md border overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-[200px]">
-              {t("common.table.name")}
-            </TableHead>
-            <TableHead className="hidden sm:table-cell">
-              {t("common.table.products")}
-            </TableHead>
-            <TableHead className="text-right min-w-[150px]">
-              {t("common.table.actions")}
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {categories.map((category) => (
-            <CategoryTableRow key={category.id} category={category} />
-          ))}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      <div className="rounded-md border overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="min-w-[200px]">
+                {t("common.table.name")}
+              </TableHead>
+              <TableHead className="hidden sm:table-cell">
+                {t("common.table.products")}
+              </TableHead>
+              <TableHead className="text-right min-w-[150px]">
+                {t("common.table.actions")}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedCategories.map((category) => (
+              <CategoryTableRow key={category.id} category={category} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {totalItems > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
+      )}
     </div>
   );
 }
@@ -79,15 +102,26 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const productCount = category._count?.products ?? 0;
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(category.name);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const deleteDialog = useDialog(`delete-category-${category.id}`);
+
+  // Editing store
+  const editingId = `category-${category.id}`;
+  const isEditing = useEditingStore((state) => state.isEditing(editingId));
+  const editName = useEditingStore((state) => state.getEditValue(editingId));
+  const startEditing = useEditingStore((state) => state.startEditing);
+  const stopEditing = useEditingStore((state) => state.stopEditing);
+  const updateEditValue = useEditingStore((state) => state.updateEditValue);
+  const resetEditing = useEditingStore((state) => state.resetEditing);
+
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
 
   useEffect(() => {
-    setEditName(category.name);
-  }, [category.name]);
+    // Reset edit value when category name changes
+    if (!isEditing) {
+      resetEditing(editingId);
+    }
+  }, [category.name, isEditing, editingId, resetEditing]);
 
   const handleSaveEdit = async () => {
     if (!editName.trim()) return;
@@ -97,21 +131,20 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
         id: category.id,
         data: { name: editName.trim() },
       });
-      setIsEditing(false);
+      stopEditing(editingId);
     } catch (error) {
       console.error("Error updating category:", error);
     }
   };
 
   const handleCancelEdit = () => {
-    setEditName(category.name);
-    setIsEditing(false);
+    stopEditing(editingId);
   };
 
   const handleDeleteConfirm = async () => {
     try {
       await deleteCategory.mutateAsync(category.id);
-      setDeleteDialogOpen(false);
+      deleteDialog.close();
     } catch (error) {
       console.error("Error deleting category:", error);
     }
@@ -125,7 +158,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
             <div className="flex items-center gap-2">
               <Input
                 value={editName}
-                onChange={(e) => setEditName(e.target.value)}
+                onChange={(e) => updateEditValue(editingId, e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     handleSaveEdit();
@@ -200,7 +233,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
                   className="h-9 w-9 p-0 touch-manipulation"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsEditing(true);
+                    startEditing(editingId, category.name);
                   }}
                   title={t("common.category.edit")}
                 >
@@ -212,7 +245,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
                   className="h-9 w-9 p-0 text-destructive hover:text-destructive touch-manipulation"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setDeleteDialogOpen(true);
+                    deleteDialog.open();
                   }}
                   disabled={deleteCategory.isPending}
                   title={t("common.category.delete")}
@@ -226,7 +259,12 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
       </TableRow>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog
+        open={deleteDialog.isOpen}
+        onOpenChange={(open) =>
+          open ? deleteDialog.open() : deleteDialog.close()
+        }
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("common.category.deleteTitle")}</DialogTitle>
@@ -249,7 +287,7 @@ function CategoryTableRow({ category }: CategoryTableRowProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
+              onClick={() => deleteDialog.close()}
             >
               {t("common.buttons.cancel")}
             </Button>

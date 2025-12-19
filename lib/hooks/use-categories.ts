@@ -1,19 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  getCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  type CreateCategoryData,
-  type UpdateCategoryData,
-} from "@/lib/api";
+import { categoryRepository } from "@/lib/repositories/category-repository";
+import type { CreateCategoryData, UpdateCategoryData } from "@/types/api";
 
 export function useCategories() {
   return useQuery({
     queryKey: ["categories"],
-    queryFn: getCategories,
+    queryFn: () => categoryRepository.getAll(),
   });
 }
 
@@ -21,7 +15,7 @@ export function useCreateCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateCategoryData) => createCategory(data),
+    mutationFn: (data: CreateCategoryData) => categoryRepository.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
@@ -33,7 +27,7 @@ export function useUpdateCategory() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateCategoryData }) =>
-      updateCategory(id, data),
+      categoryRepository.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -45,7 +39,7 @@ export function useDeleteCategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => deleteCategory(id),
+    mutationFn: (id: number) => categoryRepository.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });

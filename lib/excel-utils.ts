@@ -266,7 +266,9 @@ export function exportSellHistoryToExcel(
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   const sellHistoryData = sellHistory.map((history) => {
-    const product = productMap.get(history.productId);
+    const product = history.productId
+      ? productMap.get(history.productId)
+      : undefined;
     const initialPrice =
       history.initialPrice || (product ? product.initialPrice : 0);
     const initialCost = initialPrice * history.amount;
@@ -499,7 +501,9 @@ export function exportDailySellsToExcel(
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   const dailySalesData = todaySales.map((history) => {
-    const product = history.product || productMap.get(history.productId);
+    const product =
+      history.product ||
+      (history.productId ? productMap.get(history.productId) : undefined);
     const initialPrice =
       history.initialPrice || (product ? product.initialPrice : 0);
     const initialCost = initialPrice * history.amount;
@@ -705,19 +709,21 @@ export function generateSalesReport(products: Product[]) {
     totalQuantity += history.amount;
     totalProfit += profit;
 
-    // Product tracking
-    if (!productSalesMap.has(history.productId)) {
-      productSalesMap.set(history.productId, {
-        product: history.product,
-        quantity: 0,
-        revenue: 0,
-        profit: 0,
-      });
+    // Product tracking (only for products, not services)
+    if (history.productId) {
+      if (!productSalesMap.has(history.productId)) {
+        productSalesMap.set(history.productId, {
+          product: history.product,
+          quantity: 0,
+          revenue: 0,
+          profit: 0,
+        });
+      }
+      const productStats = productSalesMap.get(history.productId)!;
+      productStats.quantity += history.amount;
+      productStats.revenue += history.totalPrice;
+      productStats.profit += profit;
     }
-    const productStats = productSalesMap.get(history.productId)!;
-    productStats.quantity += history.amount;
-    productStats.revenue += history.totalPrice;
-    productStats.profit += profit;
 
     // Category tracking
     const categoryName = history.product.category?.name || "Uncategorized";

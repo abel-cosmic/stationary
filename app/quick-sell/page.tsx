@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,12 +16,19 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CategorySelect } from "@/layouts/common/category-select";
+import { useProducts, useBulkSell } from "@/lib/hooks/use-products";
+import { useServices } from "@/lib/hooks/use-services";
+import { useQuickSellStore } from "@/lib/stores";
 import {
-  useProducts,
-  useSellProduct,
-  useBulkSell,
-} from "@/lib/hooks/use-products";
-import type { Product, SellHistory } from "@/types/api";
+  calculateCartTotals,
+  createCartItemsFromSelected,
+} from "@/lib/services/cart-service";
+import {
+  getAllSellHistory,
+  filterSellHistoryByTab,
+  calculateSummaryStats,
+  groupSellHistoryByDate,
+} from "@/lib/services/sell-service";
 import {
   Loader2,
   ShoppingCart,
@@ -50,20 +57,45 @@ import { ThemeToggle } from "@/layouts/common/theme-toggle";
 import { LanguageToggle } from "@/layouts/common/language-toggle";
 import { useTranslation } from "react-i18next";
 
-import type { SalesTab, CartItem, SelectedProduct } from "@/types/quick-sell";
+import type { SalesTab, SelectedProduct } from "@/types/quick-sell";
 
 export default function QuickSellPage() {
   const { t } = useTranslation();
-  const [isExportingDaily, setIsExportingDaily] = useState(false);
-  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-  const [activeTab, setActiveTab] = useState<SalesTab>("today");
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<
-    Map<number, SelectedProduct>
-  >(new Map());
+
+  // Zustand store state and actions
+  const cart = useQuickSellStore((state) => state.cart);
+  const selectedProducts = useQuickSellStore((state) => state.selectedProducts);
+  const activeTab = useQuickSellStore((state) => state.activeTab);
+  const isExportingDaily = useQuickSellStore((state) => state.isExportingDaily);
+  const isGeneratingReport = useQuickSellStore(
+    (state) => state.isGeneratingReport
+  );
+
+  const addToCart = useQuickSellStore((state) => state.addToCart);
+  const removeFromCart = useQuickSellStore((state) => state.removeFromCart);
+  const clearCart = useQuickSellStore((state) => state.clearCart);
+  const toggleProductSelection = useQuickSellStore(
+    (state) => state.toggleProductSelection
+  );
+  const updateSelectedProduct = useQuickSellStore(
+    (state) => state.updateSelectedProduct
+  );
+  const clearSelectedProducts = useQuickSellStore(
+    (state) => state.clearSelectedProducts
+  );
+  const setSelectedProducts = useQuickSellStore(
+    (state) => state.setSelectedProducts
+  );
+  const setActiveTab = useQuickSellStore((state) => state.setActiveTab);
+  const setExportingDaily = useQuickSellStore(
+    (state) => state.setExportingDaily
+  );
+  const setGeneratingReport = useQuickSellStore(
+    (state) => state.setGeneratingReport
+  );
 
   const { data: products } = useProducts();
-  const sellProduct = useSellProduct();
+  const { data: services } = useServices();
   const bulkSell = useBulkSell();
 
   const sellSchema = useMemo(
@@ -152,160 +184,47 @@ export default function QuickSellPage() {
     }
   }, [selectedProduct, form]);
 
-  // Get all sell history from products, grouped by transaction
+  // Get all sell history using service
   const allSellHistory = useMemo(() => {
-    if (!products) return [];
-    const history: (SellHistory & { product: Product })[] = [];
-    products.forEach((product) => {
-      if (product.sellHistory && product.sellHistory.length > 0) {
-        product.sellHistory.forEach((item) => {
-          history.push({
-            ...item,
-            product,
-          });
-        });
-      }
-    });
-    // Sort by date, most recent first
-    return history.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-  }, [products]);
+    return getAllSellHistory(products, services);
+  }, [products, services]);
 
-  // Filter sell history based on active tab
+  // Filter sell history based on active tab using service
   const filteredSellHistory = useMemo(() => {
-    if (!allSellHistory.length) return [];
-
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekAgo = new Date(today);
-    weekAgo.setDate(weekAgo.getDate() - 7);
-
-    switch (activeTab) {
-      case "today":
-        return allSellHistory.filter((item) => {
-          const saleDate = new Date(item.createdAt);
-          const saleDateOnly = new Date(
-            saleDate.getFullYear(),
-            saleDate.getMonth(),
-            saleDate.getDate()
-          );
-          return saleDateOnly.getTime() === today.getTime();
-        });
-      case "weekly":
-        return allSellHistory.filter(
-          (item) => new Date(item.createdAt) >= weekAgo
-        );
-      case "allTime":
-        return allSellHistory;
-      default:
-        return [];
-    }
+    return filterSellHistoryByTab(allSellHistory, activeTab);
   }, [allSellHistory, activeTab]);
 
-  // Calculate summary stats for weekly and all time
+  // Calculate summary stats using service
   const summaryStats = useMemo(() => {
-    if (activeTab === "today") return null;
-
-    const totalRevenue = filteredSellHistory.reduce(
-      (sum, item) => sum + item.totalPrice,
-      0
-    );
-    const totalQuantity = filteredSellHistory.reduce(
-      (sum, item) => sum + item.amount,
-      0
-    );
-    const totalProfit = filteredSellHistory.reduce((sum, item) => {
-      const initialPrice = item.initialPrice || item.product.initialPrice;
-      const initialCost = initialPrice * item.amount;
-      return sum + (item.totalPrice - initialCost);
-    }, 0);
-    const totalTransactions = filteredSellHistory.length;
-
-    return {
-      totalRevenue,
-      totalQuantity,
-      totalProfit,
-      totalTransactions,
-      averageRevenue:
-        totalTransactions > 0 ? totalRevenue / totalTransactions : 0,
-    };
+    return calculateSummaryStats(filteredSellHistory, activeTab);
   }, [filteredSellHistory, activeTab]);
 
-  // Toggle product selection
-  const toggleProductSelection = (productId: number) => {
+  // Handle product selection with default price
+  const handleToggleProductSelection = (productId: number) => {
     const product = products?.find((p) => p.id === productId);
     if (!product) return;
 
-    const newSelected = new Map(selectedProducts);
-    if (newSelected.has(productId)) {
-      newSelected.delete(productId);
-    } else {
-      newSelected.set(productId, {
-        productId,
-        amount: 1,
-        soldPrice: product.sellingPrice,
-      });
-    }
-    setSelectedProducts(newSelected);
-  };
-
-  // Update selected product amount or price
-  const updateSelectedProduct = (
-    productId: number,
-    field: "amount" | "soldPrice",
-    value: number
-  ) => {
-    const newSelected = new Map(selectedProducts);
-    const current = newSelected.get(productId);
-    if (current) {
-      newSelected.set(productId, {
-        ...current,
-        [field]: value,
-      });
-      setSelectedProducts(newSelected);
+    toggleProductSelection(productId);
+    // Set default price if newly selected
+    if (!selectedProducts.has(productId)) {
+      updateSelectedProduct(productId, "soldPrice", product.sellingPrice);
     }
   };
 
-  // Add all selected products to cart
+  // Add all selected products to cart using service
   const addSelectedToCart = () => {
     if (!products || selectedProducts.size === 0) return;
 
-    const newCartItems: CartItem[] = [];
-    selectedProducts.forEach((selected, productId) => {
-      const product = products.find((p) => p.id === productId);
-      if (product && selected.amount > 0 && selected.soldPrice > 0) {
-        // Check if already in cart
-        const existingIndex = cart.findIndex(
-          (item) => item.productId === productId
-        );
-        if (existingIndex >= 0) {
-          // Update existing
-          const updatedCart = [...cart];
-          updatedCart[existingIndex] = {
-            ...updatedCart[existingIndex],
-            amount: selected.amount,
-            soldPrice: selected.soldPrice,
-          };
-          setCart(updatedCart);
-        } else {
-          newCartItems.push({
-            productId,
-            product,
-            amount: selected.amount,
-            soldPrice: selected.soldPrice,
-          });
-        }
-      }
-    });
+    const newCartItems = createCartItemsFromSelected(
+      selectedProducts,
+      products
+    );
 
-    if (newCartItems.length > 0) {
-      setCart([...cart, ...newCartItems]);
-    }
+    // Add items to cart (store handles duplicates)
+    newCartItems.forEach((item) => addToCart(item));
 
     // Clear selections
-    setSelectedProducts(new Map());
+    clearSelectedProducts();
   };
 
   // Sell all selected products directly
@@ -332,36 +251,15 @@ export default function QuickSellPage() {
 
     try {
       await bulkSell.mutateAsync({ items });
-      setSelectedProducts(new Map());
+      clearSelectedProducts();
     } catch (error) {
       console.error("Error selling products:", error);
     }
   };
 
-  // Remove item from cart
-  const removeFromCart = (productId: number) => {
-    setCart(cart.filter((item) => item.productId !== productId));
-  };
-
-  // Clear cart
-  const clearCart = () => {
-    setCart([]);
-  };
-
-  // Calculate cart totals
+  // Calculate cart totals using service
   const cartTotals = useMemo(() => {
-    const totalRevenue = cart.reduce(
-      (sum, item) => sum + item.amount * item.soldPrice,
-      0
-    );
-    const totalProfit = cart.reduce((sum, item) => {
-      const initialCost = item.product.initialPrice * item.amount;
-      const revenue = item.amount * item.soldPrice;
-      return sum + (revenue - initialCost);
-    }, 0);
-    const totalQuantity = cart.reduce((sum, item) => sum + item.amount, 0);
-
-    return { totalRevenue, totalProfit, totalQuantity };
+    return calculateCartTotals(cart);
   }, [cart]);
 
   // Submit cart as transaction
@@ -377,7 +275,7 @@ export default function QuickSellPage() {
         })),
       });
       // Clear cart after successful transaction
-      setCart([]);
+      clearCart();
       // Reset form
       form.reset();
     } catch (error) {
@@ -387,27 +285,27 @@ export default function QuickSellPage() {
 
   const handleExportDaily = () => {
     if (!products) return;
-    setIsExportingDaily(true);
+    setExportingDaily(true);
     try {
       exportDailySellsToExcel(allSellHistory, products);
     } catch (error) {
       console.error("Export error:", error);
       alert(t("common.quickSell.exportError"));
     } finally {
-      setIsExportingDaily(false);
+      setExportingDaily(false);
     }
   };
 
   const handleGenerateReport = () => {
     if (!products) return;
-    setIsGeneratingReport(true);
+    setGeneratingReport(true);
     try {
       generateSalesReport(products);
     } catch (error) {
       console.error("Report generation error:", error);
       alert(t("common.quickSell.reportError"));
     } finally {
-      setIsGeneratingReport(false);
+      setGeneratingReport(false);
     }
   };
 
@@ -467,7 +365,7 @@ export default function QuickSellPage() {
                       value={selectedCategoryId}
                       onValueChange={(value) => {
                         form.setValue("selectedCategoryId", value);
-                        setSelectedProducts(new Map()); // Clear selections when category changes
+                        clearSelectedProducts(); // Clear selections when category changes
                       }}
                       placeholder={t("common.quickSell.selectCategory")}
                     />
@@ -485,7 +383,7 @@ export default function QuickSellPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setSelectedProducts(new Map())}
+                            onClick={() => clearSelectedProducts()}
                             className="text-xs"
                           >
                             {t("common.quickSell.clearSelection") ||
@@ -518,16 +416,16 @@ export default function QuickSellPage() {
                                         >();
                                         filteredProducts.forEach((product) => {
                                           if (product.quantity > 0) {
-                                            newSelected.set(product.id, {
-                                              productId: product.id,
-                                              amount: 1,
-                                              soldPrice: product.sellingPrice,
-                                            });
+                                            toggleProductSelection(product.id);
+                                            updateSelectedProduct(
+                                              product.id,
+                                              "soldPrice",
+                                              product.sellingPrice
+                                            );
                                           }
                                         });
-                                        setSelectedProducts(newSelected);
                                       } else {
-                                        setSelectedProducts(new Map());
+                                        clearSelectedProducts();
                                       }
                                     }}
                                     disabled={
@@ -573,7 +471,9 @@ export default function QuickSellPage() {
                                       <Checkbox
                                         checked={isSelected}
                                         onCheckedChange={() =>
-                                          toggleProductSelection(product.id)
+                                          handleToggleProductSelection(
+                                            product.id
+                                          )
                                         }
                                         disabled={isOutOfStock}
                                       />
@@ -1001,44 +901,77 @@ export default function QuickSellPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredSellHistory.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell>
-                              <div className="flex flex-col gap-1">
-                                <span className="font-medium">
-                                  {format(
-                                    new Date(item.createdAt),
-                                    "MMM dd, yyyy"
+                        {filteredSellHistory.map((item) => {
+                          const isService = !!item.serviceId && !!item.service;
+                          const isProduct = !!item.productId && !!item.product;
+                          const name = isService
+                            ? item.service?.name
+                            : item.product?.name;
+                          const category = isProduct
+                            ? item.product?.category?.name
+                            : null;
+
+                          return (
+                            <TableRow key={item.id}>
+                              <TableCell>
+                                <div className="flex flex-col gap-1">
+                                  <span className="font-medium">
+                                    {format(
+                                      new Date(item.createdAt),
+                                      "MMM dd, yyyy"
+                                    )}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(
+                                      new Date(item.createdAt),
+                                      "HH:mm:ss"
+                                    )}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground sm:hidden">
+                                    {isService
+                                      ? t("common.service.service") || "Service"
+                                      : category ||
+                                        t(
+                                          "common.sellHistory.uncategorized"
+                                        )}{" "}
+                                    | {t("common.table.qty")}: {item.amount} |{" "}
+                                    {t("common.table.price")}:{" "}
+                                    {item.soldPrice.toFixed(2)} ETB
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell">
+                                {isService ? (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium">
+                                    {t("common.service.service") || "Service"}
+                                  </span>
+                                ) : (
+                                  category ||
+                                  t("common.sellHistory.uncategorized")
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {name}
+                                  {isService && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium">
+                                      {t("common.service.service") || "Service"}
+                                    </span>
                                   )}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {format(new Date(item.createdAt), "HH:mm:ss")}
-                                </span>
-                                <span className="text-xs text-muted-foreground sm:hidden">
-                                  {item.product.category?.name ||
-                                    t("common.sellHistory.uncategorized")}{" "}
-                                  | {t("common.table.qty")}: {item.amount} |{" "}
-                                  {t("common.table.price")}:{" "}
-                                  {item.soldPrice.toFixed(2)} ETB
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="hidden sm:table-cell">
-                              {item.product.category?.name ||
-                                t("common.sellHistory.uncategorized")}
-                            </TableCell>
-                            <TableCell>{item.product.name}</TableCell>
-                            <TableCell className="hidden sm:table-cell">
-                              {item.amount}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                              {item.soldPrice.toFixed(2)} ETB
-                            </TableCell>
-                            <TableCell className="font-semibold">
-                              {item.totalPrice.toFixed(2)} ETB
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                                </div>
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell">
+                                {item.amount}
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell">
+                                {item.soldPrice.toFixed(2)} ETB
+                              </TableCell>
+                              <TableCell className="font-semibold">
+                                {item.totalPrice.toFixed(2)} ETB
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -1106,10 +1039,16 @@ export default function QuickSellPage() {
                             dayStats.transactions += 1;
                             dayStats.quantity += item.amount;
                             dayStats.revenue += item.totalPrice;
-                            const initialPrice =
-                              item.initialPrice || item.product.initialPrice;
-                            dayStats.profit +=
-                              item.totalPrice - initialPrice * item.amount;
+                            // Calculate profit: for products use initialPrice, for services profit = revenue (no cost)
+                            if (item.serviceId && item.service) {
+                              // Services have no cost, so profit = revenue
+                              dayStats.profit += item.totalPrice;
+                            } else if (item.productId && item.product) {
+                              const initialPrice =
+                                item.initialPrice || item.product.initialPrice;
+                              dayStats.profit +=
+                                item.totalPrice - initialPrice * item.amount;
+                            }
                           });
 
                           return Array.from(groupedByDate.values())

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,44 +12,45 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Upload, Loader2, FileSpreadsheet } from "lucide-react";
+import { useImportStore } from "@/lib/stores";
 import {
-  parseExcelFile,
-  parseExcelFileMultipleSheets,
-} from "@/lib/excel-utils";
+  detectAvailableSheets,
+  getDefaultImportOptions,
+  processImport,
+} from "@/lib/services/import-service";
 import { useCreateProduct } from "@/lib/hooks/use-products";
 import { useCreateCategory } from "@/lib/hooks/use-categories";
-import { useProducts } from "@/lib/hooks/use-products";
-import { sellProduct } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "react-i18next";
+import { useDialog } from "@/lib/hooks/use-dialog";
 
 export function ImportButton() {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [availableSheets, setAvailableSheets] = useState<string[]>([]);
-  const [importOptions, setImportOptions] = useState<{
-    categories: boolean;
-    products: boolean;
-    sellHistory: boolean;
-    analytics: boolean;
-  }>({
-    categories: false,
-    products: true,
-    sellHistory: false,
-    analytics: false,
-  });
-  const [importStatus, setImportStatus] = useState<{
-    success: number;
-    failed: number;
-    errors: string[];
-  } | null>(null);
+  const dialog = useDialog("import");
+
+  // Import store state and actions
+  const file = useImportStore((state) => state.file);
+  const isProcessing = useImportStore((state) => state.isProcessing);
+  const availableSheets = useImportStore((state) => state.availableSheets);
+  const importOptions = useImportStore((state) => state.importOptions);
+  const importStatus = useImportStore((state) => state.importStatus);
+
+  const setFile = useImportStore((state) => state.setFile);
+  const setProcessing = useImportStore((state) => state.setProcessing);
+  const setAvailableSheets = useImportStore(
+    (state) => state.setAvailableSheets
+  );
+  const updateImportOptions = useImportStore(
+    (state) => state.updateImportOptions
+  );
+  const setImportOptions = useImportStore((state) => state.setImportOptions);
+  const setImportStatus = useImportStore((state) => state.setImportStatus);
+  const resetImportState = useImportStore((state) => state.resetImportState);
+
   const createProduct = useCreateProduct();
   const createCategory = useCreateCategory();
-  const { data: products } = useProducts();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -63,38 +64,24 @@ export function ImportButton() {
       setImportStatus(null);
       setAvailableSheets([]); // Reset first
 
-      // Detect available sheets in the file
+      // Detect available sheets using service
       try {
-        const sheets = await parseExcelFileMultipleSheets(selectedFile);
+        const sheets = await detectAvailableSheets(selectedFile);
         setAvailableSheets(sheets);
 
-        // Auto-select options based on available sheets
-        setImportOptions({
-          categories: sheets.includes("Categories"),
-          products: sheets.includes("Products") || sheets.length > 0, // Default to first sheet if Products not found
-          sellHistory: sheets.includes("Sell History"),
-          analytics: false, // Analytics is read-only, not importable
-        });
+        // Auto-select options based on available sheets using service
+        const defaultOptions = getDefaultImportOptions(sheets);
+        setImportOptions(defaultOptions);
       } catch (error) {
         console.error("Error reading file:", error);
         // Even if sheet detection fails, allow import from first sheet
         setAvailableSheets(["Products"]); // Default assumption
-        setImportOptions({
-          categories: false,
-          products: true,
-          sellHistory: false,
-          analytics: false,
-        });
+        setImportOptions(getDefaultImportOptions(["Products"]));
       }
     } else {
       setFile(null);
       setAvailableSheets([]);
-      setImportOptions({
-        categories: false,
-        products: true,
-        sellHistory: false,
-        analytics: false,
-      });
+      setImportOptions(getDefaultImportOptions([]));
     }
   };
 
@@ -104,183 +91,48 @@ export function ImportButton() {
       return;
     }
 
-    if (!importOptions.products && !importOptions.sellHistory) {
-      alert("Please select at least one option to import");
-      return;
-    }
-
-    setIsProcessing(true);
+    setProcessing(true);
     setImportStatus(null);
 
     try {
-      let successCount = 0;
-      let failedCount = 0;
-      const errors: string[] = [];
+      const result = await processImport(
+        file,
+        importOptions,
+        availableSheets,
+        (data) => createCategory.mutateAsync(data),
+        (data) => createProduct.mutateAsync(data),
+        t
+      );
 
-      // Import Categories
-      if (importOptions.categories) {
-        try {
-          const sheetName = availableSheets.includes("Categories")
-            ? "Categories"
-            : availableSheets[0] || undefined;
-          const data = await parseExcelFile(file, sheetName);
+      setImportStatus(result);
 
-          const existingCategoryNames = new Set<string>();
-
-          for (const row of data) {
-            try {
-              const categoryName = String(
-                row["Category Name"] || row["Name"] || ""
-              ).trim();
-
-              if (!categoryName) {
-                throw new Error(t("common.import.categoryNameRequired"));
-              }
-
-              // Skip if already processed in this batch
-              if (existingCategoryNames.has(categoryName)) {
-                throw new Error(
-                  t("common.import.duplicateCategoryName", {
-                    name: categoryName,
-                  })
-                );
-              }
-              existingCategoryNames.add(categoryName);
-
-              await createCategory.mutateAsync({ name: categoryName });
-              successCount++;
-            } catch (error) {
-              failedCount++;
-              const errorMsg =
-                error instanceof Error
-                  ? error.message
-                  : t("common.errors.unknownError");
-              const rowIndex = data.indexOf(row) + 2;
-              errors.push(
-                `${t("common.import.categories")} - ${t(
-                  "common.import.row"
-                )} ${rowIndex}: ${errorMsg}`
-              );
-            }
-          }
-        } catch (error) {
-          errors.push(
-            `${t("common.import.categories")} ${t(
-              "common.import.sheetsFound"
-            )}: ${
-              error instanceof Error
-                ? error.message
-                : t("common.import.failedToRead")
-            }`
-          );
-        }
-      }
-
-      // Import Products
-      if (importOptions.products) {
-        try {
-          // Try to use "Products" sheet if available, otherwise use first sheet
-          const sheetName = availableSheets.includes("Products")
-            ? "Products"
-            : availableSheets[0] || undefined;
-          const data = await parseExcelFile(file, sheetName);
-
-          for (const row of data) {
-            try {
-              // Map Excel columns to product data
-              const productData = {
-                name: String(row["Product Name"] || row["Name"] || "").trim(),
-                initialPrice: parseFloat(
-                  row["Initial Price (ETB)"] || row["Initial Price"] || 0
-                ),
-                sellingPrice: parseFloat(
-                  row["Selling Price (ETB)"] || row["Selling Price"] || 0
-                ),
-                quantity: parseInt(row["Quantity"] || row["Stock"] || 0),
-              };
-
-              // Validate data
-              if (!productData.name) {
-                throw new Error(t("common.import.productNameRequired"));
-              }
-              if (productData.initialPrice <= 0) {
-                throw new Error(t("common.import.initialPriceMustBePositive"));
-              }
-              if (productData.sellingPrice <= 0) {
-                throw new Error(t("common.import.sellingPriceMustBePositive"));
-              }
-              if (productData.quantity < 0 || isNaN(productData.quantity)) {
-                throw new Error(t("common.import.quantityMustBeNonNegative"));
-              }
-
-              await createProduct.mutateAsync(productData);
-              successCount++;
-            } catch (error) {
-              failedCount++;
-              const errorMsg =
-                error instanceof Error
-                  ? error.message
-                  : t("common.errors.unknownError");
-              const rowIndex = data.indexOf(row) + 2;
-              errors.push(
-                `${t("common.import.products")} - ${t(
-                  "common.import.row"
-                )} ${rowIndex}: ${errorMsg}`
-              );
-            }
-          }
-        } catch (error) {
-          errors.push(
-            `${t("common.import.products")} ${t(
-              "common.import.sheetsFound"
-            )}: ${
-              error instanceof Error
-                ? error.message
-                : t("common.errors.unknownError")
-            }`
-          );
-        }
-      }
-
-      // Note: Sell History import would require matching products by ID/Name
-      // This is complex and may not be needed, so we'll skip it for now
-      if (importOptions.sellHistory) {
-        errors.push(
-          "Sell History import is not yet supported. Please import products first, then record sales manually."
-        );
-      }
-
-      setImportStatus({
-        success: successCount,
-        failed: failedCount,
-        errors: errors.slice(0, 10),
-      });
-
-      if (successCount > 0) {
+      if (result.success > 0) {
         // Reset form after successful import
         setTimeout(() => {
-          setFile(null);
-          setOpen(false);
-          setImportStatus(null);
-          setAvailableSheets([]);
-          setImportOptions({
-            categories: false,
-            products: true,
-            sellHistory: false,
-            analytics: false,
-          });
+          resetImportState();
+          dialog.close();
         }, 3000);
       }
     } catch (error) {
       console.error("Import error:", error);
       alert(t("common.import.importFailed"));
     } finally {
-      setIsProcessing(false);
+      setProcessing(false);
     }
   };
 
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!dialog.isOpen) {
+      resetImportState();
+    }
+  }, [dialog.isOpen, resetImportState]);
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={dialog.isOpen}
+      onOpenChange={(open) => (open ? dialog.open() : dialog.close())}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <Upload className="h-4 w-4" />
@@ -342,8 +194,7 @@ export function ImportButton() {
                   )
                 }
                 onCheckedChange={(checked) =>
-                  setImportOptions({
-                    ...importOptions,
+                  updateImportOptions({
                     categories: checked === true,
                   })
                 }
@@ -391,8 +242,7 @@ export function ImportButton() {
                   )
                 }
                 onCheckedChange={(checked) =>
-                  setImportOptions({
-                    ...importOptions,
+                  updateImportOptions({
                     products: checked === true,
                   })
                 }
@@ -438,8 +288,7 @@ export function ImportButton() {
                     !availableSheets.includes("Sell History"))
                 }
                 onCheckedChange={(checked) =>
-                  setImportOptions({
-                    ...importOptions,
+                  updateImportOptions({
                     sellHistory: checked === true,
                   })
                 }
@@ -533,16 +382,8 @@ export function ImportButton() {
             type="button"
             variant="outline"
             onClick={() => {
-              setOpen(false);
-              setFile(null);
-              setImportStatus(null);
-              setAvailableSheets([]);
-              setImportOptions({
-                categories: false,
-                products: true,
-                sellHistory: false,
-                analytics: false,
-              });
+              dialog.close();
+              resetImportState();
             }}
             disabled={isProcessing}
           >

@@ -1,31 +1,25 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  getProducts,
-  getProductById,
-  createProduct,
-  updateProduct,
-  deleteProduct,
-  sellProduct,
-  bulkSell,
-  type CreateProductData,
-  type UpdateProductData,
-  type SellProductData,
-  type BulkSellRequest,
-} from "@/lib/api";
+import { productRepository } from "@/lib/repositories/product-repository";
+import { bulkSell, type BulkSellRequest } from "@/lib/api";
+import type {
+  CreateProductData,
+  UpdateProductData,
+  SellProductData,
+} from "@/types/api";
 
 export function useProducts() {
   return useQuery({
     queryKey: ["products"],
-    queryFn: getProducts,
+    queryFn: () => productRepository.getAll(),
   });
 }
 
 export function useProduct(id: number) {
   return useQuery({
     queryKey: ["products", id],
-    queryFn: () => getProductById(id),
+    queryFn: () => productRepository.getById(id),
     enabled: !!id,
   });
 }
@@ -34,7 +28,7 @@ export function useCreateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateProductData) => createProduct(data),
+    mutationFn: (data: CreateProductData) => productRepository.create(data),
     onSuccess: (product) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       // If product has a category, invalidate categories to update product count
@@ -50,7 +44,7 @@ export function useUpdateProduct() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateProductData }) =>
-      updateProduct(id, data),
+      productRepository.update(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["products", variables.id] });
@@ -62,7 +56,7 @@ export function useDeleteProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => deleteProduct(id),
+    mutationFn: (id: number) => productRepository.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
@@ -74,7 +68,7 @@ export function useSellProduct() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: SellProductData }) =>
-      sellProduct(id, data),
+      productRepository.sell(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["products", variables.id] });

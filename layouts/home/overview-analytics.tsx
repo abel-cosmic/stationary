@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { Product, Category } from "@/types/api";
+import type { Product, Category, Service } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,
@@ -14,11 +14,13 @@ import { useTranslation } from "react-i18next";
 interface OverviewAnalyticsProps {
   categories: Category[];
   products: Product[];
+  services?: Service[];
 }
 
 export function OverviewAnalytics({
   categories,
   products,
+  services = [],
 }: OverviewAnalyticsProps) {
   const { t } = useTranslation();
   const analytics = useMemo(() => {
@@ -32,13 +34,19 @@ export function OverviewAnalytics({
       totalProfit += product.profit || 0;
     });
 
+    // Add service revenue (services have no cost, so revenue = profit)
+    services.forEach((service) => {
+      totalRevenue += service.revenue || 0;
+      totalProfit += service.revenue || 0; // Services: profit = revenue (no cost)
+    });
+
     return {
       totalCategories,
       totalProducts,
       totalRevenue,
       totalProfit,
     };
-  }, [categories, products]);
+  }, [categories, products, services]);
 
   const stats = [
     {

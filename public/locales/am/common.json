@@ -313,6 +313,42 @@
       "productsNotLoaded": "ምርቶች አልተጫኑም",
       "pleaseSelectValidProduct": "እባክዎ ትክክለኛ ምርት ይምረጡ",
       "insufficientQuantity": "በቂ ብዛት አይገኝም"
-    }
+    },
+    "service": {
+      "name": "የአገልግሎት ስም",
+      "nameRequired": "ስም ያስፈልጋል",
+      "namePlaceholder": "ለምሳሌ፣ ማተም፣ መተየብ",
+      "defaultPrice": "ነባሪ ዋጋ",
+      "priceRequired": "ዋጋ አዎንታዊ መሆን አለበት",
+      "priceMin": "ዋጋ ቢያንስ 0.01 መሆን አለበት",
+      "description": "መግለጫ",
+      "descriptionPlaceholder": "ለዚህ አገልግሎት መግለጫ ያክሉ",
+      "create": "አገልግሎት ፍጠር",
+      "createDescription": "ለመከታተል አዲስ አገልግሎት ያክሉ",
+      "edit": "አገልግሎት አርም",
+      "editDescription": "የአገልግሎት ዝርዝሮችን ያዘምኑ",
+      "manage": "አገልግሎቶችን አስተዳድር",
+      "list": "አገልግሎቶች",
+      "addNew": "አዲስ ጨምር",
+      "noServices": "እስካሁን አገልግሎቶች የሉም። የመጀመሪያዎን አገልግሎት ከላይ ይፍጠሩ።",
+      "noServicesAvailable": "ምንም አገልግሎት አይገኝም",
+      "confirmDelete": "ይህንን አገልግሎት መሰረዝ እርግጠኛ ነዎት?",
+      "quickSell": "ፈጣን አገልግሎት",
+      "quickSellDescription": "የአገልግሎት ሽያጭን በፍጥነት ይመዝግቡ",
+      "service": "አገልግሎት",
+      "selectService": "አገልግሎት ይምረጡ",
+      "amount": "ብዛት",
+      "enterAmount": "ብዛት ያስገቡ",
+      "pricePerUnit": "የአንድ አሃድ ዋጋ",
+      "sell": "አገልግሎት ይሽጡ",
+      "mustSelect": "አገልግሎት መመረጥ አለበት",
+      "revenue": "ገቢ",
+      "totalSold": "ጠቅላላ የተሸጠ"
+    },
+    "optional": "አማራጭ",
+    "loading": "በመጫን ላይ...",
+    "managementTools": "የአስተዳደር መሳሪያዎች",
+    "actions": "ድርጊቶች",
+    "update": "ያዘምኑ"
   }
 }

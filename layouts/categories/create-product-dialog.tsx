@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useDialog } from "@/lib/hooks/use-dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -64,7 +65,7 @@ export function CreateProductDialog({
   categoryId,
 }: CreateProductDialogProps) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const dialog = useDialog("create-product");
   const createProduct = useCreateProduct();
 
   const schema = useMemo(() => createProductSchema(t), [t]);
@@ -109,14 +110,17 @@ export function CreateProductDialog({
         quantity: data.quantity,
         categoryId: data.categoryId,
       });
-      setOpen(false);
+      dialog.close();
     } catch (error) {
       console.error("Error creating product:", error);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={dialog.isOpen}
+      onOpenChange={(open) => (open ? dialog.open() : dialog.close())}
+    >
       <DialogTrigger asChild>
         {trigger || (
           <Button>
@@ -253,7 +257,7 @@ export function CreateProductDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => dialog.close()}
                 className="w-full sm:w-auto h-11 sm:h-10 text-base sm:text-sm touch-manipulation"
               >
                 {t("common.buttons.cancel")}
