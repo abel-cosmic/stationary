@@ -243,7 +243,7 @@ export async function processImport(
   t: (key: string) => string
 ): Promise<ImportResult> {
   if (!importOptions.products && !importOptions.sellHistory) {
-    throw new Error("Please select at least one option to import");
+    throw new Error(t("common.import.noDataSelected"));
   }
 
   let totalSuccess = 0;
@@ -278,9 +278,7 @@ export async function processImport(
 
   // Note: Sell History import would require matching products by ID/Name
   if (importOptions.sellHistory) {
-    allErrors.push(
-      "Sell History import is not yet supported. Please import products first, then record sales manually."
-    );
+    allErrors.push(t("common.import.sellHistoryNotSupported"));
   }
 
   return {

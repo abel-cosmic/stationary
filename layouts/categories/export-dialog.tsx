@@ -59,7 +59,9 @@ export function ExportDialog({ products }: ExportDialogProps) {
           className="flex items-center gap-2"
         >
           <Download className="h-4 w-4" />
-          <span className="hidden sm:inline">{t("common.export.export")} Excel</span>
+          <span className="hidden sm:inline">
+            {t("common.export.exportExcel")}
+          </span>
           <span className="sm:hidden">{t("common.export.export")}</span>
         </Button>
       </DialogTrigger>
@@ -72,14 +74,19 @@ export function ExportDialog({ products }: ExportDialogProps) {
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-3">
-            <Label className="text-base font-semibold">{t("common.export.exportOptions")}</Label>
-            
+            <Label className="text-base font-semibold">
+              {t("common.export.exportOptions")}
+            </Label>
+
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="export-products"
                 checked={exportOptions.products}
                 onCheckedChange={(checked) =>
-                  setExportOptions({ ...exportOptions, products: checked === true })
+                  setExportOptions({
+                    ...exportOptions,
+                    products: checked === true,
+                  })
                 }
               />
               <Label
@@ -98,7 +105,10 @@ export function ExportDialog({ products }: ExportDialogProps) {
                 id="export-history"
                 checked={exportOptions.sellHistory}
                 onCheckedChange={(checked) =>
-                  setExportOptions({ ...exportOptions, sellHistory: checked === true })
+                  setExportOptions({
+                    ...exportOptions,
+                    sellHistory: checked === true,
+                  })
                 }
               />
               <Label
@@ -107,7 +117,12 @@ export function ExportDialog({ products }: ExportDialogProps) {
               >
                 {t("common.export.sellHistory")}
                 <span className="text-muted-foreground ml-2">
-                  ({products.reduce((sum, p) => sum + (p.sellHistory?.length || 0), 0)} {t("common.export.records")})
+                  (
+                  {products.reduce(
+                    (sum, p) => sum + (p.sellHistory?.length || 0),
+                    0
+                  )}{" "}
+                  {t("common.export.records")})
                 </span>
               </Label>
             </div>
@@ -117,7 +132,10 @@ export function ExportDialog({ products }: ExportDialogProps) {
                 id="export-analytics"
                 checked={exportOptions.analytics}
                 onCheckedChange={(checked) =>
-                  setExportOptions({ ...exportOptions, analytics: checked === true })
+                  setExportOptions({
+                    ...exportOptions,
+                    analytics: checked === true,
+                  })
                 }
               />
               <Label
@@ -132,11 +150,13 @@ export function ExportDialog({ products }: ExportDialogProps) {
             </div>
           </div>
 
-          {!exportOptions.products && !exportOptions.sellHistory && !exportOptions.analytics && (
-            <p className="text-sm text-destructive">
-              {t("common.export.selectAtLeastOne")}
-            </p>
-          )}
+          {!exportOptions.products &&
+            !exportOptions.sellHistory &&
+            !exportOptions.analytics && (
+              <p className="text-sm text-destructive">
+                {t("common.export.selectAtLeastOne")}
+              </p>
+            )}
         </div>
         <DialogFooter>
           <Button
@@ -152,7 +172,9 @@ export function ExportDialog({ products }: ExportDialogProps) {
             onClick={handleExport}
             disabled={
               isExporting ||
-              (!exportOptions.products && !exportOptions.sellHistory && !exportOptions.analytics)
+              (!exportOptions.products &&
+                !exportOptions.sellHistory &&
+                !exportOptions.analytics)
             }
           >
             {isExporting ? (

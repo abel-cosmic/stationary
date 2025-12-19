@@ -77,6 +77,7 @@
     "quickSell": {
       "title": "ፈጣን ሽያጭ",
       "description": "ምርቶችን በፍጥነት ይሽጡ እና የሽያጭ ታሪክዎን ይመልከቱ",
+      "recentSales": "የቅርብ ሽያጮች",
       "selectCategory": "ምድብ ይምረጡ",
       "selectProduct": "ምርት ይምረጡ",
       "enterAmount": "ብዛት ያስገቡ",
@@ -151,6 +152,7 @@
       "importFailed": "ማስገባት አልተሳካም። እባክዎ የፋይሉን ቅርጸት ይፈትሹ እና እንደገና ይሞክሩ።",
       "noDataSelected": "እባክዎ ለመስገባት ቢያንስ አንድ የውሂብ አይነት ይምረጡ።",
       "selectFile": "ለመስገባት ፋይል ይምረጡ።",
+      "selectFileSimple": "እባክዎ ፋይል ይምረጡ",
       "selectExcelFile": "እባክዎ የ Excel ፋይል (.xlsx ወይም .xls) ይምረጡ",
       "productList": "የምርት ዝርዝር",
       "analyticsSummary": "የትንታኔ ማጠቃለያ",
@@ -170,6 +172,7 @@
     },
     "export": {
       "export": "ወደ ውጭ ላክ",
+      "exportExcel": "Excel ወደ ውጭ ላክ",
       "exportCategories": "ምድቦችን ወደ ውጭ ላክ",
       "exportProducts": "ምርቶችን ወደ ውጭ ላክ",
       "exporting": "በማስላክ ላይ...",
@@ -199,7 +202,10 @@
       "loadingProducts": "ምርቶችን በመጫን ላይ ስህተት",
       "unknownError": "የማይታወቅ ስህተት",
       "productNotFound": "ምርት አልተገኘም",
-      "categoryNotFound": "ምድብ አልተገኘም"
+      "categoryNotFound": "ምድብ አልተገኘም",
+      "failedToParseExcel": "ኤክሴል ፋይል ማቀናበር አልተሳካም: {{error}}",
+      "failedToReadFile": "ፋይል ማንበብ አልተሳካም",
+      "sheetNotFound": "ሉህ \"{{name}}\" በፋይሉ ውስጥ አልተገኘም"
     },
     "language": {
       "currentLanguage": "የአሁኑ ቋንቋ: {{name}}"
@@ -349,6 +355,93 @@
     "loading": "በመጫን ላይ...",
     "managementTools": "የአስተዳደር መሳሪያዎች",
     "actions": "ድርጊቶች",
-    "update": "ያዘምኑ"
+    "update": "ያዘምኑ",
+    "pagination": {
+      "itemsPerPage": "በአንድ ገጽ እቃዎች:",
+      "showing": "{{startItem}}-{{endItem}} ከ {{totalItems}} እቃዎች የሚታዩ",
+      "previous": "ያለፈ",
+      "next": "ቀጣይ"
+    },
+    "excel": {
+      "productId": "የምርት መለያ",
+      "productName": "የምርት ስም",
+      "initialPriceETB": "የመጀመሪያ ዋጋ (ETB)",
+      "sellingPriceETB": "የሽያጭ ዋጋ (ETB)",
+      "quantity": "ብዛት",
+      "totalSold": "ጠቅላላ የተሸጠ",
+      "revenueETB": "ገቢ (ETB)",
+      "profitETB": "ትርፍ (ETB)",
+      "createdAt": "የተፈጠረበት ቀን",
+      "updatedAt": "የተዘመነበት ቀን",
+      "saleId": "የሽያጭ መለያ",
+      "saleDate": "የሽያጭ ቀን",
+      "quantitySold": "የተሸጠ ብዛት",
+      "pricePerUnitETB": "የአንድ አሃድ ዋጋ (ETB)",
+      "totalRevenueETB": "ጠቅላላ ገቢ (ETB)",
+      "categoryId": "የምድብ መለያ",
+      "categoryName": "የምድብ ስም",
+      "productCount": "የምርት ብዛት",
+      "category": "ምድብ",
+      "saleTime": "የሽያጭ ሰዓት",
+      "unknown": "ያልታወቀ",
+      "noSellHistoryAvailable": "ምንም የሽያጭ ታሪክ አይገኝም",
+      "noSalesToday": "ዛሬ ሽያጭ የለም",
+      "noSalesDataAvailable": "ምንም የሽያጭ ውሂብ አይገኝም",
+      "sheetNames": {
+        "products": "ምርቶች",
+        "sellHistory": "የሽያጭ ታሪክ",
+        "analytics": "ትንታኔ",
+        "analyticsSummary": "የትንታኔ ማጠቃለያ",
+        "categories": "ምድቦች",
+        "categoryBreakdown": "የምድብ ብልሽት",
+        "dailySales": "የቀን ሽያጭ",
+        "dailySummary": "የቀን ማጠቃለያ",
+        "summary": "ማጠቃለያ",
+        "topProducts": "ከፍተኛ ምርቶች"
+      },
+      "analyticsMetrics": {
+        "totalProducts": "ጠቅላላ ምርቶች",
+        "totalRevenue": "ጠቅላላ ገቢ",
+        "totalItemsSold": "ጠቅላላ የተሸጡ እቃዎች",
+        "totalInitialCost": "ጠቅላላ የመጀመሪያ ወጪ",
+        "todaysProfit": "የዛሬ ትርፍ",
+        "weeklyProfit": "የሳምንት ትርፍ (ያለፈው 7 ቀናት)",
+        "monthlyProfit": "የወር ትርፍ (ያለፈው 30 ቀናት)",
+        "totalProfit": "ጠቅላላ ትርፍ",
+        "profitMargin": "የትርፍ ህዳግ",
+        "exportDate": "የማስላክ ቀን",
+        "date": "ቀን",
+        "totalSales": "ጠቅላላ ሽያጭ",
+        "totalQuantitySold": "ጠቅላላ የተሸጠ ብዛት",
+        "averageRevenuePerSale": "አማካይ ገቢ በሽያጭ",
+        "exportTime": "የማስላክ ሰዓት",
+        "period": "ጊዜ",
+        "itemsSold": "የተሸጡ እቃዎች",
+        "transactions": "ግብይቶች",
+        "revenueETB": "ገቢ (ETB)",
+        "profitMarginPercent": "የትርፍ ህዳግ (%)",
+        "averageRevenuePerTransaction": "አማካይ ገቢ በግብይት"
+      },
+      "units": {
+        "items": "እቃዎች",
+        "etb": "ETB",
+        "percent": "%",
+        "transactions": "ግብይቶች"
+      },
+      "fileNamePrefix": {
+        "stationeryInventory": "Stationery_Inventory_",
+        "categories": "Categories_",
+        "sellHistory": "SellHistory_",
+        "analytics": "Analytics_",
+        "dailySales": "DailySales_",
+        "salesReport": "SalesReport_"
+      },
+      "periods": {
+        "today": "ዛሬ",
+        "last7Days": "ያለፈው 7 ቀናት",
+        "last30Days": "ያለፈው 30 ቀናት",
+        "allTime": "ሁሉም ጊዜ"
+      }
+    }
   }
 }

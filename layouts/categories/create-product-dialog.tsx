@@ -90,7 +90,7 @@ export function CreateProductDialog({
 
   // Reset form when dialog opens/closes
   useEffect(() => {
-    if (!open) {
+    if (!dialog.isOpen) {
       form.reset({
         name: "",
         initialPrice: 0,
@@ -99,7 +99,7 @@ export function CreateProductDialog({
         categoryId: categoryId ?? null,
       });
     }
-  }, [open, categoryId, form]);
+  }, [dialog.isOpen, categoryId, form]);
 
   const onSubmit = async (data: ProductFormValues) => {
     try {

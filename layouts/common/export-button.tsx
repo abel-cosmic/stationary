@@ -51,7 +51,7 @@ export function ExportButton({ products }: ExportButtonProps) {
         <>
           <Download className="h-4 w-4" />
           <span className="hidden sm:inline">
-            {t("common.export.export")} Excel
+            {t("common.export.exportExcel")}
           </span>
           <span className="sm:hidden">{t("common.export.export")}</span>
         </>

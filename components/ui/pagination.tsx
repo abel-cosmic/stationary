@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface PaginationProps {
   currentPage: number;
@@ -29,6 +30,7 @@ export function Pagination({
   onItemsPerPageChange,
   className,
 }: PaginationProps) {
+  const { t } = useTranslation();
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
@@ -88,7 +90,7 @@ export function Pagination({
       <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">
-            Items per page:
+            {t("common.pagination.itemsPerPage")}
           </span>
           <Select
             value={itemsPerPage.toString()}
@@ -109,7 +111,11 @@ export function Pagination({
           </Select>
         </div>
         <div className="text-sm text-muted-foreground whitespace-nowrap">
-          Showing {startItem}-{endItem} of {totalItems} items
+          {t("common.pagination.showing", {
+            startItem,
+            endItem,
+            totalItems,
+          })}
         </div>
       </div>
 
@@ -123,7 +129,9 @@ export function Pagination({
           className="h-9"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="hidden sm:inline">Previous</span>
+          <span className="hidden sm:inline">
+            {t("common.pagination.previous")}
+          </span>
         </Button>
 
         <div className="flex items-center gap-1">
@@ -164,7 +172,9 @@ export function Pagination({
           disabled={currentPage === totalPages}
           className="h-9"
         >
-          <span className="hidden sm:inline">Next</span>
+          <span className="hidden sm:inline">
+            {t("common.pagination.next")}
+          </span>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

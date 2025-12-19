@@ -74,6 +74,7 @@
     "quickSell": {
       "title": "Quick Sell",
       "description": "Sell products quickly and view your sales history",
+      "recentSales": "Recent Sales",
       "selectCategory": "Select category",
       "selectProduct": "Select product",
       "enterAmount": "Enter amount",
@@ -148,6 +149,7 @@
       "importFailed": "Import failed. Please check the file format and try again.",
       "noDataSelected": "Please select at least one data type to import.",
       "selectFile": "Please select a file to import.",
+      "selectFileSimple": "Please select a file",
       "selectExcelFile": "Please select an Excel file (.xlsx or .xls)",
       "productList": "Product List",
       "analyticsSummary": "Analytics Summary",
@@ -163,6 +165,7 @@
     },
     "export": {
       "export": "Export",
+      "exportExcel": "Export Excel",
       "exportCategories": "Export Categories",
       "exportProducts": "Export Products",
       "exporting": "Exporting...",
@@ -191,7 +194,10 @@
       "loadingProducts": "Error loading products",
       "unknownError": "Unknown error",
       "productNotFound": "Product not found",
-      "categoryNotFound": "Category not found"
+      "categoryNotFound": "Category not found",
+      "failedToParseExcel": "Failed to parse Excel file: {{error}}",
+      "failedToReadFile": "Failed to read file",
+      "sheetNotFound": "Sheet \"{{name}}\" not found in the file"
     },
     "language": {
       "currentLanguage": "Current language: {{name}}"
@@ -341,6 +347,93 @@
     "loading": "Loading...",
     "managementTools": "Management Tools",
     "actions": "Actions",
-    "update": "Update"
+    "update": "Update",
+    "pagination": {
+      "itemsPerPage": "Items per page:",
+      "showing": "Showing {{startItem}}-{{endItem}} of {{totalItems}} items",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "excel": {
+      "productId": "Product ID",
+      "productName": "Product Name",
+      "initialPriceETB": "Initial Price (ETB)",
+      "sellingPriceETB": "Selling Price (ETB)",
+      "quantity": "Quantity",
+      "totalSold": "Total Sold",
+      "revenueETB": "Revenue (ETB)",
+      "profitETB": "Profit (ETB)",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "saleId": "Sale ID",
+      "saleDate": "Sale Date",
+      "quantitySold": "Quantity Sold",
+      "pricePerUnitETB": "Price per Unit (ETB)",
+      "totalRevenueETB": "Total Revenue (ETB)",
+      "categoryId": "Category ID",
+      "categoryName": "Category Name",
+      "productCount": "Product Count",
+      "category": "Category",
+      "saleTime": "Sale Time",
+      "unknown": "Unknown",
+      "noSellHistoryAvailable": "No sell history available",
+      "noSalesToday": "No sales today",
+      "noSalesDataAvailable": "No sales data available",
+      "sheetNames": {
+        "products": "Products",
+        "sellHistory": "Sell History",
+        "analytics": "Analytics",
+        "analyticsSummary": "Analytics Summary",
+        "categories": "Categories",
+        "categoryBreakdown": "Category Breakdown",
+        "dailySales": "Daily Sales",
+        "dailySummary": "Daily Summary",
+        "summary": "Summary",
+        "topProducts": "Top Products"
+      },
+      "analyticsMetrics": {
+        "totalProducts": "Total Products",
+        "totalRevenue": "Total Revenue",
+        "totalItemsSold": "Total Items Sold",
+        "totalInitialCost": "Total Initial Cost",
+        "todaysProfit": "Today's Profit",
+        "weeklyProfit": "Weekly Profit (Last 7 Days)",
+        "monthlyProfit": "Monthly Profit (Last 30 Days)",
+        "totalProfit": "Total Profit",
+        "profitMargin": "Profit Margin",
+        "exportDate": "Export Date",
+        "date": "Date",
+        "totalSales": "Total Sales",
+        "totalQuantitySold": "Total Quantity Sold",
+        "averageRevenuePerSale": "Average Revenue per Sale",
+        "exportTime": "Export Time",
+        "period": "Period",
+        "itemsSold": "Items Sold",
+        "transactions": "Transactions",
+        "revenueETB": "Revenue (ETB)",
+        "profitMarginPercent": "Profit Margin (%)",
+        "averageRevenuePerTransaction": "Average Revenue per Transaction"
+      },
+      "units": {
+        "items": "items",
+        "etb": "ETB",
+        "percent": "%",
+        "transactions": "transactions"
+      },
+      "fileNamePrefix": {
+        "stationeryInventory": "Stationery_Inventory_",
+        "categories": "Categories_",
+        "sellHistory": "SellHistory_",
+        "analytics": "Analytics_",
+        "dailySales": "DailySales_",
+        "salesReport": "SalesReport_"
+      },
+      "periods": {
+        "today": "Today",
+        "last7Days": "Last 7 Days",
+        "last30Days": "Last 30 Days",
+        "allTime": "All Time"
+      }
+    }
   }
 }

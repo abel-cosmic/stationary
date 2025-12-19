@@ -87,7 +87,7 @@ export function ImportButton() {
 
   const handleImport = async () => {
     if (!file) {
-      alert("Please select a file");
+      alert(t("common.import.selectFileSimple"));
       return;
     }
 
@@ -136,8 +136,10 @@ export function ImportButton() {
       <DialogTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <Upload className="h-4 w-4" />
-          <span className="hidden sm:inline">Import Excel</span>
-          <span className="sm:hidden">Import</span>
+          <span className="hidden sm:inline">
+            {t("common.import.importExcel")}
+          </span>
+          <span className="sm:hidden">{t("common.import.import")}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
@@ -149,7 +151,7 @@ export function ImportButton() {
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="file-upload">Excel File</Label>
+            <Label htmlFor="file-upload">{t("common.import.excelFile")}</Label>
             <div className="flex items-center gap-2">
               <Input
                 id="file-upload"
@@ -209,22 +211,22 @@ export function ImportButton() {
                     : "cursor-pointer"
                 }`}
               >
-                Categories
+                {t("common.import.categories")}
                 {file &&
                   availableSheets.length > 0 &&
                   !availableSheets.includes("Categories") && (
                     <span className="text-muted-foreground ml-2">
-                      (Sheet not found)
+                      {t("common.import.sheetNotFound")}
                     </span>
                   )}
                 {file && availableSheets.length === 0 && (
                   <span className="text-muted-foreground ml-2 text-xs">
-                    (Will import from first sheet)
+                    {t("common.import.willImportFromFirstSheet")}
                   </span>
                 )}
                 {!file && (
                   <span className="text-muted-foreground ml-2 text-xs">
-                    (Select file first)
+                    {t("common.import.selectFileFirst")}
                   </span>
                 )}
               </Label>
@@ -303,22 +305,22 @@ export function ImportButton() {
                     : "cursor-pointer"
                 }`}
               >
-                Sell History
+                {t("common.import.sellHistory")}
                 {file &&
                   availableSheets.length > 0 &&
                   !availableSheets.includes("Sell History") && (
                     <span className="text-muted-foreground ml-2">
-                      (Sheet not found)
+                      {t("common.import.sheetNotFound")}
                     </span>
                   )}
                 {file && availableSheets.includes("Sell History") && (
                   <span className="text-muted-foreground ml-2 text-xs">
-                    (Requires products to exist)
+                    {t("common.import.requiresProducts")}
                   </span>
                 )}
                 {!file && (
                   <span className="text-muted-foreground ml-2 text-xs">
-                    (Select file first)
+                    {t("common.import.selectFileFirst")}
                   </span>
                 )}
               </Label>
@@ -348,7 +350,7 @@ export function ImportButton() {
             !importOptions.sellHistory &&
             file && (
               <p className="text-sm text-destructive">
-                Please select at least one option to import.
+                {t("common.import.noDataSelected")}
               </p>
             )}
 

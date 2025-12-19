@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -51,8 +52,6 @@ import {
   exportDailySellsToExcel,
   generateSalesReport,
 } from "@/lib/excel-utils";
-import { useTranslation } from "react-i18next";
-
 interface QuickSellDialogProps {
   trigger?: React.ReactNode;
 }
@@ -66,51 +65,55 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
   const { data: products, isLoading: productsLoading } = useProducts();
   const sellProduct = useSellProduct();
 
-  const sellSchema = z
-    .object({
-      selectedCategoryId: z.number().nullable().optional(),
-      selectedProductId: z.coerce
-        .number()
-        .int("Product must be selected")
-        .positive("Product must be selected"),
-      amount: z.coerce
-        .number()
-        .int("Amount must be an integer")
-        .positive("Amount must be positive")
-        .min(1, "Amount must be at least 1"),
-      soldPrice: z.coerce
-        .number()
-        .positive("Selling price must be positive")
-        .min(0.01, "Selling price must be at least 0.01"),
-    })
-    .superRefine((data, ctx) => {
-      if (!products) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Products not loaded",
-          path: ["selectedProductId"],
-        });
-        return;
-      }
+  const sellSchema = useMemo(
+    () =>
+      z
+        .object({
+          selectedCategoryId: z.number().nullable().optional(),
+          selectedProductId: z.coerce
+            .number()
+            .int(t("common.validation.productMustBeSelected"))
+            .positive(t("common.validation.productMustBeSelected")),
+          amount: z.coerce
+            .number()
+            .int(t("common.validation.amountMustBeInteger"))
+            .positive(t("common.validation.amountMustBePositive"))
+            .min(1, t("common.validation.amountMustBeAtLeast1")),
+          soldPrice: z.coerce
+            .number()
+            .positive(t("common.validation.sellingPriceMustBePositive"))
+            .min(0.01, t("common.validation.sellingPriceMustBeAtLeast001")),
+        })
+        .superRefine((data, ctx) => {
+          if (!products) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: t("common.validation.productsNotLoaded"),
+              path: ["selectedProductId"],
+            });
+            return;
+          }
 
-      const product = products.find((p) => p.id === data.selectedProductId);
-      if (!product) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Please select a valid product",
-          path: ["selectedProductId"],
-        });
-        return;
-      }
+          const product = products.find((p) => p.id === data.selectedProductId);
+          if (!product) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: t("common.validation.pleaseSelectValidProduct"),
+              path: ["selectedProductId"],
+            });
+            return;
+          }
 
-      if (data.amount > product.quantity) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Insufficient quantity available",
-          path: ["amount"],
-        });
-      }
-    });
+          if (data.amount > product.quantity) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: t("common.validation.insufficientQuantity"),
+              path: ["amount"],
+            });
+          }
+        }),
+    [t, products]
+  );
 
   type SellFormValues = z.infer<typeof sellSchema>;
 
@@ -214,7 +217,7 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
       exportDailySellsToExcel(allSellHistory, products);
     } catch (error) {
       console.error("Export error:", error);
-      alert("Failed to export daily sales. Please try again.");
+      alert(t("common.quickSell.exportError"));
     } finally {
       setIsExportingDaily(false);
     }
@@ -227,7 +230,7 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
       generateSalesReport(products);
     } catch (error) {
       console.error("Report generation error:", error);
-      alert("Failed to generate sales report. Please try again.");
+      alert(t("common.quickSell.reportError"));
     } finally {
       setIsGeneratingReport(false);
     }
@@ -239,15 +242,17 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
         {trigger || (
           <Button>
             <ShoppingCart className="mr-2 h-4 w-4" />
-            Quick Sell
+            {t("common.quickSell.title")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Quick Sell</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">
+            {t("common.quickSell.title")}
+          </DialogTitle>
           <DialogDescription className="text-sm">
-            Sell products quickly and view your sales history
+            {t("common.quickSell.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -271,8 +276,7 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
                         {t("common.quickSell.noItemsAvailable")}
                       </p>
                       <p className="text-xs text-destructive/80 mt-1">
-                        This product is currently out of stock and cannot be
-                        sold.
+                        {t("common.quickSell.outOfStockMessage")}
                       </p>
                     </div>
                   )}
@@ -503,13 +507,19 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
               {isExportingDaily ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="hidden sm:inline">Exporting...</span>
+                  <span className="hidden sm:inline">
+                    {t("common.quickSell.exporting")}
+                  </span>
                 </>
               ) : (
                 <>
                   <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline">Export Daily Sells</span>
-                  <span className="sm:hidden">Daily Export</span>
+                  <span className="hidden sm:inline">
+                    {t("common.quickSell.exportDaily")}
+                  </span>
+                  <span className="sm:hidden">
+                    {t("common.quickSell.dailyExport")}
+                  </span>
                 </>
               )}
             </Button>
@@ -525,15 +535,19 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
               {isGeneratingReport ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="hidden sm:inline">Generating...</span>
+                  <span className="hidden sm:inline">
+                    {t("common.quickSell.generating")}
+                  </span>
                 </>
               ) : (
                 <>
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">
-                    Generate Sales Report
+                    {t("common.quickSell.generateReport")}
                   </span>
-                  <span className="sm:hidden">Report</span>
+                  <span className="sm:hidden">
+                    {t("common.quickSell.report")}
+                  </span>
                 </>
               )}
             </Button>
@@ -545,32 +559,36 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
               <AccordionTrigger className="px-4">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  <span className="text-base font-semibold">Recent Sales</span>
+                  <span className="text-base font-semibold">
+                    {t("common.quickSell.recentSales")}
+                  </span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-0">
                 {allSellHistory.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    No sales history available
+                    {t("common.sellHistory.noHistory")}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="min-w-[140px]">Date</TableHead>
-                          <TableHead className="hidden sm:table-cell">
-                            Category
+                          <TableHead className="min-w-[140px]">
+                            {t("common.sellHistory.date")}
                           </TableHead>
-                          <TableHead>Product</TableHead>
                           <TableHead className="hidden sm:table-cell">
-                            Quantity
+                            {t("common.table.category")}
+                          </TableHead>
+                          <TableHead>{t("common.quickSell.product")}</TableHead>
+                          <TableHead className="hidden sm:table-cell">
+                            {t("common.table.quantity")}
                           </TableHead>
                           <TableHead className="hidden md:table-cell">
-                            Price per Unit
+                            {t("common.sellHistory.pricePerUnit")}
                           </TableHead>
                           <TableHead className="min-w-[120px]">
-                            Total Revenue
+                            {t("common.sellHistory.totalRevenue")}
                           </TableHead>
                         </TableRow>
                       </TableHeader>
@@ -587,14 +605,16 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
                                 </span>
                                 <span className="text-xs text-muted-foreground sm:hidden">
                                   {item.product.category?.name ||
-                                    "Uncategorized"}{" "}
-                                  | Qty: {item.amount} | Price:{" "}
+                                    t("common.sellHistory.uncategorized")}{" "}
+                                  | {t("common.table.qty")}: {item.amount} |{" "}
+                                  {t("common.table.price")}:{" "}
                                   {item.soldPrice.toFixed(2)} ETB
                                 </span>
                               </div>
                             </TableCell>
                             <TableCell className="hidden sm:table-cell">
-                              {item.product.category?.name || "Uncategorized"}
+                              {item.product.category?.name ||
+                                t("common.sellHistory.uncategorized")}
                             </TableCell>
                             <TableCell>{item.product.name}</TableCell>
                             <TableCell className="hidden sm:table-cell">

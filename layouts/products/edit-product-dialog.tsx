@@ -118,7 +118,7 @@ export function EditProductDialog({
         {trigger || (
           <Button variant="outline">
             <Edit className="mr-2 h-4 w-4" />
-            Edit
+            {t("common.product.edit")}
           </Button>
         )}
       </DialogTrigger>
@@ -162,7 +162,7 @@ export function EditProductDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-medium">
-                      Initial Price
+                      {t("common.product.initialPrice")}
                     </FormLabel>
                     <FormControl>
                       <Input
