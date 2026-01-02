@@ -6,6 +6,7 @@ import type { Category } from "@/types/api";
 import { exportCategoriesToExcel } from "@/lib/excel-utils";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAlert } from "@/lib/hooks/use-alert";
 
 interface CategoryExportButtonProps {
   categories: Category[];
@@ -15,11 +16,12 @@ export function CategoryExportButton({
   categories,
 }: CategoryExportButtonProps) {
   const { t } = useTranslation();
+  const { showAlert, AlertComponent } = useAlert();
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (categories.length === 0) {
-      alert(t("common.export.noCategoriesToExport"));
+      await showAlert(t("common.export.noCategoriesToExport"));
       return;
     }
 
@@ -28,7 +30,7 @@ export function CategoryExportButton({
       exportCategoriesToExcel(categories);
     } catch (error) {
       console.error("Export error:", error);
-      alert(t("common.export.failedToExport"));
+      await showAlert(t("common.export.failedToExport"));
     } finally {
       setIsExporting(false);
     }
@@ -58,5 +60,8 @@ export function CategoryExportButton({
         </>
       )}
     </Button>
+    <>
+      <AlertComponent />
+    </>
   );
 }

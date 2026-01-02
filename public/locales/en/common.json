@@ -18,6 +18,8 @@
     },
     "buttons": {
       "cancel": "Cancel",
+      "ok": "OK",
+      "confirm": "Confirm",
       "save": "Save",
       "create": "Create",
       "edit": "Edit",

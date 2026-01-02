@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useConfirm } from "@/lib/hooks/use-confirm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -138,7 +139,11 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm(t("common.service.confirmDelete"))) {
+    const confirmed = await showConfirm(t("common.service.confirmDelete"), {
+      variant: "destructive",
+      confirmLabel: t("common.buttons.deletePermanently"),
+    });
+    if (confirmed) {
       try {
         await deleteService.mutateAsync(id);
       } catch (error) {
@@ -388,5 +393,8 @@ export function ServiceManager({ trigger }: ServiceManagerProps) {
         </div>
       </DialogContent>
     </Dialog>
+    <>
+      <ConfirmComponent />
+    </>
   );
 }

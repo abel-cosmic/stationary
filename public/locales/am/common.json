@@ -18,6 +18,8 @@
     },
     "buttons": {
       "cancel": "ተወዳጅ",
+      "ok": "እሺ",
+      "confirm": "አረጋግጥ",
       "save": "አስቀምጥ",
       "create": "ፍጠር",
       "edit": "አርም",

@@ -7,6 +7,7 @@ import { exportToExcel } from "@/lib/excel-utils";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAlert } from "@/lib/hooks/use-alert";
 
 interface ExportButtonProps {
   products: Product[];
@@ -14,11 +15,12 @@ interface ExportButtonProps {
 
 export function ExportButton({ products }: ExportButtonProps) {
   const { t } = useTranslation();
+  const { showAlert, AlertComponent } = useAlert();
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (products.length === 0) {
-      alert(t("common.export.noProductsToExport"));
+      await showAlert(t("common.export.noProductsToExport"));
       return;
     }
 
@@ -27,7 +29,7 @@ export function ExportButton({ products }: ExportButtonProps) {
       exportToExcel(products);
     } catch (error) {
       console.error("Export error:", error);
-      alert(t("common.export.failedToExport"));
+      await showAlert(t("common.export.failedToExport"));
     } finally {
       setIsExporting(false);
     }
@@ -57,5 +59,8 @@ export function ExportButton({ products }: ExportButtonProps) {
         </>
       )}
     </Button>
+    <>
+      <AlertComponent />
+    </>
   );
 }

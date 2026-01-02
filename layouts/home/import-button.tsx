@@ -25,10 +25,12 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "react-i18next";
 import { useDialog } from "@/lib/hooks/use-dialog";
+import { useAlert } from "@/lib/hooks/use-alert";
 
 export function ImportButton() {
   const { t } = useTranslation();
   const dialog = useDialog("import");
+  const { showAlert, AlertComponent } = useAlert();
 
   // Import store state and actions
   const file = useImportStore((state) => state.file);
@@ -57,7 +59,7 @@ export function ImportButton() {
     if (selectedFile) {
       const ext = selectedFile.name.split(".").pop()?.toLowerCase();
       if (ext !== "xlsx" && ext !== "xls") {
-        alert(t("common.import.selectExcelFile"));
+        await showAlert(t("common.import.selectExcelFile"));
         return;
       }
       setFile(selectedFile);
@@ -87,7 +89,7 @@ export function ImportButton() {
 
   const handleImport = async () => {
     if (!file) {
-      alert(t("common.import.selectFileSimple"));
+      await showAlert(t("common.import.selectFileSimple"));
       return;
     }
 
@@ -115,7 +117,7 @@ export function ImportButton() {
       }
     } catch (error) {
       console.error("Import error:", error);
-      alert(t("common.import.importFailed"));
+      await showAlert(t("common.import.importFailed"));
     } finally {
       setProcessing(false);
     }
@@ -414,5 +416,8 @@ export function ImportButton() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <>
+      <AlertComponent />
+    </>
   );
 }

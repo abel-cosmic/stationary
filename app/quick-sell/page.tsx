@@ -56,11 +56,13 @@ import Link from "next/link";
 import { ThemeToggle } from "@/layouts/common/theme-toggle";
 import { LanguageToggle } from "@/layouts/common/language-toggle";
 import { useTranslation } from "react-i18next";
+import { useAlert } from "@/lib/hooks/use-alert";
 
 import type { SalesTab, SelectedProduct } from "@/types/quick-sell";
 
 export default function QuickSellPage() {
   const { t } = useTranslation();
+  const { showAlert, AlertComponent } = useAlert();
 
   // Zustand store state and actions
   const cart = useQuickSellStore((state) => state.cart);
@@ -283,27 +285,27 @@ export default function QuickSellPage() {
     }
   };
 
-  const handleExportDaily = () => {
+  const handleExportDaily = async () => {
     if (!products) return;
     setExportingDaily(true);
     try {
       exportDailySellsToExcel(allSellHistory, products);
     } catch (error) {
       console.error("Export error:", error);
-      alert(t("common.quickSell.exportError"));
+      await showAlert(t("common.quickSell.exportError"));
     } finally {
       setExportingDaily(false);
     }
   };
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async () => {
     if (!products) return;
     setGeneratingReport(true);
     try {
       generateSalesReport(products);
     } catch (error) {
       console.error("Report generation error:", error);
-      alert(t("common.quickSell.reportError"));
+      await showAlert(t("common.quickSell.reportError"));
     } finally {
       setGeneratingReport(false);
     }
@@ -1128,5 +1130,8 @@ export default function QuickSellPage() {
         </div>
       </div>
     </div>
+    <>
+      <AlertComponent />
+    </>
   );
 }

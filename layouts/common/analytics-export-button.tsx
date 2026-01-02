@@ -6,6 +6,7 @@ import type { Product } from "@/types/api";
 import { exportAnalyticsToExcel } from "@/lib/excel-utils";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAlert } from "@/lib/hooks/use-alert";
 
 interface AnalyticsExportButtonProps {
   products: Product[];
@@ -15,11 +16,12 @@ export function AnalyticsExportButton({
   products,
 }: AnalyticsExportButtonProps) {
   const { t } = useTranslation();
+  const { showAlert, AlertComponent } = useAlert();
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (products.length === 0) {
-      alert(t("common.export.noProductsForAnalytics"));
+      await showAlert(t("common.export.noProductsForAnalytics"));
       return;
     }
 
@@ -28,7 +30,7 @@ export function AnalyticsExportButton({
       exportAnalyticsToExcel(products);
     } catch (error) {
       console.error("Export error:", error);
-      alert(t("common.export.failedToExportAnalytics"));
+      await showAlert(t("common.export.failedToExportAnalytics"));
     } finally {
       setIsExporting(false);
     }
@@ -59,5 +61,8 @@ export function AnalyticsExportButton({
         </>
       )}
     </Button>
+    <>
+      <AlertComponent />
+    </>
   );
 }

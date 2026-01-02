@@ -17,6 +17,7 @@ import { exportToExcel } from "@/lib/excel-utils";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "react-i18next";
+import { useAlert } from "@/lib/hooks/use-alert";
 
 interface ExportDialogProps {
   products: Product[];
@@ -24,6 +25,7 @@ interface ExportDialogProps {
 
 export function ExportDialog({ products }: ExportDialogProps) {
   const { t } = useTranslation();
+  const { showAlert, AlertComponent } = useAlert();
   const [open, setOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportOptions, setExportOptions] = useState({
@@ -32,9 +34,9 @@ export function ExportDialog({ products }: ExportDialogProps) {
     analytics: true,
   });
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (products.length === 0) {
-      alert(t("common.export.noProductsToExport"));
+      await showAlert(t("common.export.noProductsToExport"));
       return;
     }
 
@@ -44,7 +46,7 @@ export function ExportDialog({ products }: ExportDialogProps) {
       setOpen(false);
     } catch (error) {
       console.error("Export error:", error);
-      alert(t("common.export.failedToExport"));
+      await showAlert(t("common.export.failedToExport"));
     } finally {
       setIsExporting(false);
     }
@@ -192,5 +194,8 @@ export function ExportDialog({ products }: ExportDialogProps) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <>
+      <AlertComponent />
+    </>
   );
 }
