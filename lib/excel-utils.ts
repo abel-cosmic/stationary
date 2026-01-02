@@ -575,6 +575,14 @@ export function exportDailySellsToExcel(
     const initialCost = initialPrice * history.amount;
     const profit = history.totalPrice - initialCost;
 
+    const paymentStatus = history.debitItem
+      ? history.debitItem.debit?.status === "PAID"
+        ? t("common.debits.paid") || "Paid"
+        : history.debitItem.debit?.status === "PARTIAL"
+        ? t("common.debits.partial") || "Partial"
+        : t("common.debits.pending") || "Pending"
+      : t("common.debits.paid") || "Paid";
+
     return {
       [t("common.excel.saleId")]: history.id,
       [t("common.excel.productId")]: history.productId,
@@ -590,6 +598,7 @@ export function exportDailySellsToExcel(
       [t("common.excel.pricePerUnitETB")]: history.soldPrice,
       [t("common.excel.totalRevenueETB")]: history.totalPrice,
       [t("common.excel.profitETB")]: profit,
+      [t("common.excel.paymentStatus") || "Payment Status"]: paymentStatus,
     };
   });
 

@@ -52,15 +52,12 @@ import {
   exportDailySellsToExcel,
   generateSalesReport,
 } from "@/lib/excel-utils";
-import { useAlert } from "@/lib/hooks/use-alert";
-
 interface QuickSellDialogProps {
   trigger?: React.ReactNode;
 }
 
 export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
   const { t } = useTranslation();
-  const { showAlert, AlertComponent } = useAlert();
   const [open, setOpen] = useState(false);
   const [isExportingDaily, setIsExportingDaily] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -213,27 +210,27 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
     }
   };
 
-  const handleExportDaily = async () => {
+  const handleExportDaily = () => {
     if (!products) return;
     setIsExportingDaily(true);
     try {
       exportDailySellsToExcel(allSellHistory, products);
     } catch (error) {
       console.error("Export error:", error);
-      await showAlert(t("common.quickSell.exportError"));
+      alert(t("common.quickSell.exportError"));
     } finally {
       setIsExportingDaily(false);
     }
   };
 
-  const handleGenerateReport = async () => {
+  const handleGenerateReport = () => {
     if (!products) return;
     setIsGeneratingReport(true);
     try {
       generateSalesReport(products);
     } catch (error) {
       console.error("Report generation error:", error);
-      await showAlert(t("common.quickSell.reportError"));
+      alert(t("common.quickSell.reportError"));
     } finally {
       setIsGeneratingReport(false);
     }
@@ -641,8 +638,5 @@ export function QuickSellDialog({ trigger }: QuickSellDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
-    <>
-      <AlertComponent />
-    </>
   );
 }

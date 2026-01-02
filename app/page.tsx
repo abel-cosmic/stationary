@@ -20,6 +20,8 @@ import {
   ShoppingCart,
   Wrench,
   Settings,
+  Receipt,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -103,6 +105,18 @@ export default function Home() {
               </Button>
             </Link>
             <QuickServiceDialog />
+            <Link href="/expenses">
+              <Button variant="outline">
+                <Receipt className="mr-2 h-4 w-4" />
+                {t("common.expenses.title") || "Expenses"}
+              </Button>
+            </Link>
+            <Link href="/debits">
+              <Button variant="outline">
+                <FileText className="mr-2 h-4 w-4" />
+                {t("common.debits.title") || "Debits"}
+              </Button>
+            </Link>
           </div>
 
           {/* Secondary Actions - Collapsed */}

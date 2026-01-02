@@ -55,6 +55,8 @@ export interface SellHistory {
   createdAt: string;
   product?: Product; // Included when fetched with relations
   service?: Service; // Included when fetched with relations
+  transaction?: Transaction; // Included when fetched with relations
+  debitItem?: DebitItem; // Included when fetched with relations
 }
 
 export interface CreateProductData {
@@ -119,4 +121,111 @@ export interface UpdateServiceData {
 export interface SellServiceData {
   amount: number;
   soldPrice: number;
+}
+
+export type DebitStatus = "PENDING" | "PARTIAL" | "PAID";
+
+export interface Debit {
+  id: number;
+  totalAmount: number;
+  paidAmount: number;
+  status: DebitStatus;
+  customerName?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  paidAt?: string | null;
+  debitItems?: DebitItem[];
+}
+
+export interface DebitItem {
+  id: number;
+  debitId: number;
+  sellHistoryId: number;
+  amount: number;
+  createdAt: string;
+  debit?: Debit;
+  sellHistory?: SellHistory;
+}
+
+export interface CreateDebitData {
+  customerName?: string | null;
+  notes?: string | null;
+  debitItems: Array<{
+    sellHistoryId: number;
+    amount: number;
+  }>;
+}
+
+export interface UpdateDebitData {
+  customerName?: string | null;
+  notes?: string | null;
+  paidAmount?: number;
+}
+
+export interface PayDebitData {
+  amount: number;
+}
+
+export interface UpdateSellHistoryData {
+  amount?: number;
+  soldPrice?: number;
+  createdAt?: string;
+}
+
+export interface SupplyExpense {
+  id: number;
+  description: string;
+  amount: number;
+  supplier?: string | null;
+  quantity?: number | null;
+  unitPrice?: number | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSupplyExpenseData {
+  description: string;
+  amount: number;
+  supplier?: string | null;
+  quantity?: number | null;
+  unitPrice?: number | null;
+  notes?: string | null;
+}
+
+export interface UpdateSupplyExpenseData {
+  description?: string;
+  amount?: number;
+  supplier?: string | null;
+  quantity?: number | null;
+  unitPrice?: number | null;
+  notes?: string | null;
+}
+
+export interface DailyExpense {
+  id: number;
+  description: string;
+  amount: number;
+  category?: string | null;
+  notes?: string | null;
+  expenseDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDailyExpenseData {
+  description: string;
+  amount: number;
+  category?: string | null;
+  notes?: string | null;
+  expenseDate?: string;
+}
+
+export interface UpdateDailyExpenseData {
+  description?: string;
+  amount?: number;
+  category?: string | null;
+  notes?: string | null;
+  expenseDate?: string;
 }

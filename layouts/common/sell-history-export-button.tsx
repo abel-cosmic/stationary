@@ -6,7 +6,6 @@ import type { Product, SellHistory } from "@/types/api";
 import { exportSellHistoryToExcel } from "@/lib/excel-utils";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useAlert } from "@/lib/hooks/use-alert";
 
 interface SellHistoryExportButtonProps {
   products: Product[];
@@ -16,7 +15,6 @@ export function SellHistoryExportButton({
   products,
 }: SellHistoryExportButtonProps) {
   const { t } = useTranslation();
-  const { showAlert, AlertComponent } = useAlert();
   const [isExporting, setIsExporting] = useState(false);
 
   // Extract all sell history from products
@@ -30,9 +28,9 @@ export function SellHistoryExportButton({
     return history;
   }, [products]);
 
-  const handleExport = async () => {
+  const handleExport = () => {
     if (allSellHistory.length === 0) {
-      await showAlert(t("common.export.noSellHistoryToExport"));
+      alert(t("common.export.noSellHistoryToExport"));
       return;
     }
 
@@ -41,7 +39,7 @@ export function SellHistoryExportButton({
       exportSellHistoryToExcel(allSellHistory, products);
     } catch (error) {
       console.error("Export error:", error);
-      await showAlert(t("common.export.failedToExport"));
+      alert(t("common.export.failedToExport"));
     } finally {
       setIsExporting(false);
     }
@@ -71,8 +69,5 @@ export function SellHistoryExportButton({
         </>
       )}
     </Button>
-    <>
-      <AlertComponent />
-    </>
   );
 }
