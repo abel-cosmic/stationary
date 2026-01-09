@@ -66,6 +66,7 @@ import { useDeleteSellHistory } from "@/lib/hooks/use-sell-history";
 import { useRemoveDebitItem } from "@/lib/hooks/use-debits";
 
 import type { SalesTab, SelectedProduct } from "@/types/quick-sell";
+import type { SellHistory } from "@/types/api";
 
 export default function QuickSellPage() {
   const { t } = useTranslation();
@@ -111,6 +112,10 @@ export default function QuickSellPage() {
   const [saleToDelete, setSaleToDelete] = useState<number | null>(null);
   const [markAsSoldConfirmOpen, setMarkAsSoldConfirmOpen] = useState(false);
   const [saleToMarkAsSold, setSaleToMarkAsSold] = useState<number | null>(null);
+  const [debitDialogOpen, setDebitDialogOpen] = useState(false);
+  const [sellHistoryForDebit, setSellHistoryForDebit] = useState<SellHistory[]>(
+    []
+  );
 
   const sellSchema = useMemo(
     () =>
@@ -294,6 +299,52 @@ export default function QuickSellPage() {
       form.reset();
     } catch (error) {
       console.error("Error processing transaction:", error);
+    }
+  };
+
+  // Submit cart as debit transaction
+  const handleSubmitCartAsDebit = async () => {
+    if (cart.length === 0) return;
+
+    try {
+      const transaction = await bulkSell.mutateAsync({
+        items: cart.map((item) => ({
+          productId: item.productId,
+          amount: item.amount,
+          soldPrice: item.soldPrice,
+        })),
+      });
+
+      // Clear cart after successful sale (products are already sold)
+      clearCart();
+      // Reset form
+      form.reset();
+
+      // Extract sellHistory from the transaction
+      if (transaction.sellHistory && transaction.sellHistory.length > 0) {
+        setSellHistoryForDebit(transaction.sellHistory);
+        setDebitDialogOpen(true);
+      } else {
+        console.error("No sell history returned from transaction");
+      }
+    } catch (error) {
+      console.error("Error processing transaction for debit:", error);
+    }
+  };
+
+  // Handle successful debit creation
+  const handleDebitSuccess = () => {
+    // Close dialog and reset state
+    setDebitDialogOpen(false);
+    setSellHistoryForDebit([]);
+  };
+
+  // Handle dialog close (when user cancels)
+  const handleDebitDialogClose = (open: boolean) => {
+    setDebitDialogOpen(open);
+    if (!open) {
+      // Reset state when dialog is closed
+      setSellHistoryForDebit([]);
     }
   };
 
@@ -757,18 +808,38 @@ export default function QuickSellPage() {
                                 {cartTotals.totalProfit.toFixed(2)} ETB
                               </span>
                             </div>
-                            <Button
-                              onClick={handleSubmitCart}
-                              disabled={bulkSell.isPending || cart.length === 0}
-                              className="w-full mt-4"
-                              size="lg"
-                            >
-                              {bulkSell.isPending && (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              )}
-                              {t("common.quickSell.completeTransaction") ||
-                                "Complete Transaction"}
-                            </Button>
+                            <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                              <Button
+                                onClick={handleSubmitCart}
+                                disabled={
+                                  bulkSell.isPending || cart.length === 0
+                                }
+                                className="flex-1"
+                                size="lg"
+                              >
+                                {bulkSell.isPending && (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                {t("common.quickSell.completeSale") ||
+                                  "Complete Sale"}
+                              </Button>
+                              <Button
+                                onClick={handleSubmitCartAsDebit}
+                                disabled={
+                                  bulkSell.isPending || cart.length === 0
+                                }
+                                variant="outline"
+                                className="flex-1"
+                                size="lg"
+                              >
+                                {bulkSell.isPending && (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                {t("common.quickSell.addAsDebit") ||
+                                  "Add as Debit"}
+                              </Button>
+                            </div>
                           </div>
                         </>
                       )}
@@ -850,17 +921,12 @@ export default function QuickSellPage() {
                   <div className="p-4 border-b">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       {/* Tab Switcher */}
-                      <div className="flex items-center gap-1 p-1 bg-muted rounded-md">
+                      <div className="inline-flex items-center gap-2 p-1 bg-muted rounded-lg">
                         <Button
                           variant={activeTab === "today" ? "default" : "ghost"}
                           size="sm"
                           onClick={() => setActiveTab("today")}
-                          className={cn(
-                            "h-9 px-3 text-sm",
-                            activeTab === "today"
-                              ? "bg-background shadow-sm"
-                              : ""
-                          )}
+                          className="h-8 px-3 text-sm"
                         >
                           <Calendar className="h-4 w-4 mr-2" />
                           {t("common.quickSell.today")}
@@ -869,12 +935,7 @@ export default function QuickSellPage() {
                           variant={activeTab === "weekly" ? "default" : "ghost"}
                           size="sm"
                           onClick={() => setActiveTab("weekly")}
-                          className={cn(
-                            "h-9 px-3 text-sm",
-                            activeTab === "weekly"
-                              ? "bg-background shadow-sm"
-                              : ""
-                          )}
+                          className="h-8 px-3 text-sm"
                         >
                           <Clock className="h-4 w-4 mr-2" />
                           {t("common.quickSell.weekly")}
@@ -885,12 +946,7 @@ export default function QuickSellPage() {
                           }
                           size="sm"
                           onClick={() => setActiveTab("allTime")}
-                          className={cn(
-                            "h-9 px-3 text-sm",
-                            activeTab === "allTime"
-                              ? "bg-background shadow-sm"
-                              : ""
-                          )}
+                          className="h-8 px-3 text-sm"
                         >
                           {t("common.quickSell.allTime")}
                         </Button>
@@ -1380,6 +1436,14 @@ export default function QuickSellPage() {
           setSaleToMarkAsSold(null);
         }}
       />
+      {sellHistoryForDebit.length > 0 && (
+        <AssignDebitDialog
+          sellHistory={sellHistoryForDebit}
+          open={debitDialogOpen}
+          onOpenChange={handleDebitDialogClose}
+          onSuccess={handleDebitSuccess}
+        />
+      )}
     </>
   );
 }

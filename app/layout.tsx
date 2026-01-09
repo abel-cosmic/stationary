@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ui/theme";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { I18nProvider } from "@/components/providers/i18n-provider";
 import { LangUpdater } from "@/layouts/common/lang-updater";
+import { ChatWidget } from "@/components/support/chat-widget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +40,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <QueryProvider>{children}</QueryProvider>
+            <QueryProvider>
+              {children}
+              <ChatWidget />
+            </QueryProvider>
           </ThemeProvider>
         </I18nProvider>
       </body>

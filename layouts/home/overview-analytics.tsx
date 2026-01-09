@@ -3,11 +3,6 @@
 import { useMemo } from "react";
 import type { Product, Category, Service } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { FolderTree, Package, DollarSign, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -79,62 +74,59 @@ export function OverviewAnalytics({
   ];
 
   return (
-    <div className="mb-4 sm:mb-6">
-      <Accordion defaultOpen={false}>
-        <div className="border rounded-lg">
-          <AccordionTrigger className="px-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              <span>{t("common.analytics.overview")}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
-              {stats.map((stat) => {
-                const Icon = stat.icon;
-                const isPositive = stat.isProfit ? stat.value >= 0 : true;
+    <div className="mb-6 sm:mb-8 lg:mb-10">
+      {/* Section Header */}
+      <div className="flex items-center gap-2 mb-4 sm:mb-6">
+        <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+        <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold">
+          {t("common.analytics.overview")}
+        </h2>
+      </div>
 
-                return (
-                  <Card
-                    key={stat.title}
-                    className="hover:shadow-md transition-shadow"
-                  >
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
-                      <CardTitle className="text-xs sm:text-sm font-medium leading-tight">
-                        {stat.title}
-                      </CardTitle>
-                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-                    </CardHeader>
-                    <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-                      <div className="text-lg sm:text-xl lg:text-2xl font-bold">
-                        {stat.isCurrency ? (
-                          stat.isProfit ? (
-                            <span
-                              className={
-                                isPositive ? "text-green-400" : "text-red-400"
-                              }
-                            >
-                              {stat.value >= 0 ? "+" : ""}
-                              {stat.value.toFixed(2)} ETB
-                            </span>
-                          ) : (
-                            <span>{stat.value.toFixed(2)} ETB</span>
-                          )
-                        ) : (
-                          <span>{stat.value}</span>
-                        )}
-                      </div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                        {stat.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </AccordionContent>
-        </div>
-      </Accordion>
+      {/* Analytics Cards Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          const isPositive = stat.isProfit ? stat.value >= 0 : true;
+
+          return (
+            <Card
+              key={stat.title}
+              className="hover:shadow-lg transition-all duration-200 hover:border-primary/20"
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 sm:pb-4 px-4 sm:px-6 pt-4 sm:pt-6">
+                <CardTitle className="text-sm sm:text-base font-semibold leading-tight">
+                  {stat.title}
+                </CardTitle>
+                <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground flex-shrink-0 opacity-70" />
+              </CardHeader>
+              <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+                  {stat.isCurrency ? (
+                    stat.isProfit ? (
+                      <span
+                        className={
+                          isPositive ? "text-green-500 dark:text-green-400" : "text-red-500 dark:text-red-400"
+                        }
+                      >
+                        {stat.value >= 0 ? "+" : ""}
+                        {stat.value.toFixed(2)} ETB
+                      </span>
+                    ) : (
+                      <span className="text-foreground">{stat.value.toFixed(2)} ETB</span>
+                    )
+                  ) : (
+                    <span className="text-foreground">{stat.value}</span>
+                  )}
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  {stat.description}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }

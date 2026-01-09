@@ -137,7 +137,9 @@
       "selectedProducts": "Selected Products",
       "addSelectedToCart": "Add Selected to Cart",
       "sellSelected": "Sell Selected",
-      "selectCategoryFirst": "Please select a category to view products"
+      "selectCategoryFirst": "Please select a category to view products",
+      "completeSale": "Complete Sale",
+      "addAsDebit": "Add as Debit"
     },
     "import": {
       "importExcel": "Import Excel",
@@ -519,6 +521,58 @@
         "last7Days": "Last 7 Days",
         "last30Days": "Last 30 Days",
         "allTime": "All Time"
+      }
+    },
+    "support": {
+      "title": "Customer Support",
+      "openChat": "Open chat",
+      "close": "Close",
+      "minimize": "Minimize",
+      "maximize": "Maximize",
+      "greeting": "Hello! I'm here to help you learn about the features of this application. Select a feature below to get more information.",
+      "selectFeature": "Select a feature to learn more:",
+      "askAnother": "Need help with something else?",
+      "features": {
+        "categories": {
+          "name": "Categories",
+          "description": "Organize products",
+          "response": "Categories allow you to organize and group your products for better inventory management. You can create categories like 'Pens', 'Notebooks', or 'Office Supplies', and assign products to them. This helps you quickly find and manage related products together. You can create, edit, and delete categories, and view all products within each category."
+        },
+        "products": {
+          "name": "Products",
+          "description": "Manage inventory",
+          "response": "The Products feature lets you add, edit, and track all your inventory items. For each product, you can set the initial purchase price, selling price, and quantity in stock. The system automatically tracks total sales, revenue, and profit for each product. You can also view detailed sell history for any product, including dates, quantities sold, and prices."
+        },
+        "quickSell": {
+          "name": "Quick Sell",
+          "description": "Fast sales processing",
+          "response": "Quick Sell is designed for fast and efficient sales processing. You can quickly select products, add them to a cart, and complete transactions. The feature supports bulk sales, allowing you to sell multiple products at once. You can also assign sales to debits for later payment, edit or delete sales, and export daily sales reports. Sales history is automatically tracked and organized by date."
+        },
+        "services": {
+          "name": "Services",
+          "description": "Service management",
+          "response": "Services allow you to track and sell non-product offerings like printing, typing, or other services. You can create services with default prices, record service sales, and track revenue and total sales for each service. Services are separate from products and can be sold independently, making it easy to manage both product and service-based revenue streams."
+        },
+        "expenses": {
+          "name": "Expenses",
+          "description": "Track costs",
+          "response": "The Expenses feature helps you track two types of expenses: Supply Expenses (purchases of inventory items) and Daily Expenses (operational costs like utilities, rent, etc.). You can record expenses with details like supplier information, quantities, unit prices, categories, and notes. This helps you monitor your costs and maintain accurate financial records."
+        },
+        "debits": {
+          "name": "Debits",
+          "description": "Customer payments",
+          "response": "Debits Management allows you to track customer purchases that haven't been fully paid. You can create debit records from sales, assign customer names, and track payment status (paid, partial, or pending). You can record payments against debits and see remaining balances. This feature is essential for managing credit sales and ensuring you collect all outstanding payments."
+        },
+        "analytics": {
+          "name": "Analytics",
+          "description": "Business insights",
+          "response": "Analytics provides comprehensive insights into your business performance. You can view total revenue, profit, items sold, and other key metrics. Analytics are available at different levels: overview (all products), category-level, and product-level. You can filter by date ranges (today, last 7 days, last 30 days, or all time) and export analytics reports to Excel for further analysis."
+        },
+        "importExport": {
+          "name": "Import/Export",
+          "description": "Data management",
+          "response": "Import/Export features allow you to manage your data efficiently. You can import categories and products from Excel files, making it easy to set up your inventory from existing spreadsheets. You can export product lists, sell history, and analytics summaries to Excel for backup, reporting, or analysis. The system supports multiple export formats and can generate comprehensive reports with all your business data."
+        }
       }
     }
   }

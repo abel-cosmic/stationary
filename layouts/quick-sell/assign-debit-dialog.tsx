@@ -61,16 +61,24 @@ interface AssignDebitDialogProps {
   sellHistory: SellHistory | SellHistory[];
   trigger?: React.ReactNode;
   onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function AssignDebitDialog({
   sellHistory,
   trigger,
   onSuccess,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: AssignDebitDialogProps) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const createDebit = useCreateDebit();
+
+  // Use controlled state if provided, otherwise use internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
 
   const sellHistoryArray = useMemo(
     () => (Array.isArray(sellHistory) ? sellHistory : [sellHistory]),
@@ -128,14 +136,16 @@ export function AssignDebitDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" size="sm">
-            <CreditCard className="mr-2 h-4 w-4" />
-            {t("common.quickSell.assignToDebit") || "Assign to Debit"}
-          </Button>
-        )}
-      </DialogTrigger>
+      {!controlledOpen && (
+        <DialogTrigger asChild>
+          {trigger || (
+            <Button variant="outline" size="sm">
+              <CreditCard className="mr-2 h-4 w-4" />
+              {t("common.quickSell.assignToDebit") || "Assign to Debit"}
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">
